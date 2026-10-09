@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Examinations — StudentHub{% endblock %}
+{% block page_breadcrumb %}Administration / Examination Timetable{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Examination Schedules</h3>
+    <p class="text-secondary small mb-0">Schedule upcoming semester exams, assign examination venues, and publish dates</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Schedule Exam Form -->
+  <div class="col-lg-4">
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3 border-bottom pb-2">Schedule Examination</h5>
+      <form method="POST" action="{{ url_for('admin.examinations') }}" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Subject *</label>
+          {{ form.subject_id(class="form-select" + (" is-invalid" if form.subject_id.errors else "")) }}
+          {% for error in form.subject_id.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Exam Title *</label>
+          {{ form.exam_name(class="form-control" + (" is-invalid" if form.exam_name.errors else ""), placeholder="e.g. Mid-Term Examination 2026") }}
+          {% for error in form.exam_name.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Date *</label>
+          {{ form.exam_date(class="form-control" + (" is-invalid" if form.exam_date.errors else "")) }}
+          {% for error in form.exam_date.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label small fw-semibold text-secondary">Start Time *</label>
+            {{ form.start_time(class="form-control" + (" is-invalid" if form.start_time.errors else "")) }}
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold text-secondary">End Time *</label>
+            {{ form.end_time(class="form-control" + (" is-invalid" if form.end_time.errors else "")) }}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Venue / Room *</label>
+          {{ form.venue(class="form-control" + (" is-invalid" if form.venue.errors else ""), placeholder="e.g. Hall B-101") }}
+          {% for error in form.venue.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label small fw-semibold text-secondary">Max Marks *</label>
+            {{ form.max_marks(class="form-control" + (" is-invalid" if form.max_marks.errors else "")) }}
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold text-secondary">Passing Marks *</label>
+            {{ form.passing_marks(class="form-control" + (" is-invalid" if form.passing_marks.errors else "")) }}
+          </div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label small fw-semibold text-secondary">Semester *</label>
+            {{ form.semester(class="form-select" + (" is-invalid" if form.semester.errors else "")) }}
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold text-secondary">Academic Year *</label>
+            {{ form.academic_year(class="form-control" + (" is-invalid" if form.academic_year.errors else "")) }}
+          </div>
+        </div>
+
+        <div class="form-check mb-3">
+          {{ form.is_published(class="form-check-input", id="is_published") }}
+          <label class="form-check-label small text-secondary" for="is_published">
+            Publish immediately to student timetable
+          </label>
+        </div>
+
+        <div class="d-grid mt-4">
+          <button type="submit" class="btn btn-primary fw-semibold">
+            <i class="bi bi-calendar-plus me-1"></i> Save Examination
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scheduled Exams List -->
+  <div class="col-lg-8">
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3">Scheduled Examinations ({{ examinations|length }})</h5>
+      <div class="table-responsive">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Date & Time</th>
+              <th>Subject & Exam</th>
+              <th>Venue</th>
+              <th class="text-center">Marks</th>
+              <th class="text-center">Status</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if examinations %}
+              {% for ex in examinations %}
+                <tr>
+                  <td>
+                    <div class="fw-bold"><i class="bi bi-calendar-date text-primary me-1"></i>{{ ex.exam_date|format_date }}</div>
+                    <small class="text-secondary">{{ ex.start_time|format_time }} – {{ ex.end_time|format_time }}</small>
+                  </td>
+                  <td>
+                    <div class="fw-semibold">{{ ex.exam_name }}</div>
+                    <small class="badge bg-secondary-subtle text-secondary">{{ ex.subject.code }} - {{ ex.subject.name }}</small>
+                  </td>
+                  <td><span class="badge bg-info-subtle text-info"><i class="bi bi-geo-alt me-1"></i>{{ ex.venue }}</span></td>
+                  <td class="text-center small">{{ ex.max_marks }} <span class="text-muted">(Pass: {{ ex.passing_marks }})</span></td>
+                  <td class="text-center">
+                    {% if ex.is_published %}
+                      <span class="badge badge-soft-success">Published</span>
+                    {% else %}
+                      <span class="badge badge-soft-warning">Draft</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    <div class="d-inline-flex gap-1">
+                      <form method="POST" action="{{ url_for('admin.toggle_exam_publish', exam_id=ex.id) }}" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-secondary" title="Toggle Publish">
+                          {% if ex.is_published %}<i class="bi bi-eye-slash"></i>{% else %}<i class="bi bi-eye"></i>{% endif %}
+                        </button>
+                      </form>
+                      <form method="POST" action="{{ url_for('admin.delete_examination', exam_id=ex.id) }}" class="d-inline" onsubmit="return confirm('Delete this examination?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="6" class="text-center py-4 text-muted">No examinations scheduled yet.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Students — StudentHub{% endblock %}
+{% block page_breadcrumb %}Administration / Student Directory{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Student Directory</h3>
+    <p class="text-secondary small mb-0">Total {{ students|length }} student record(s) found</p>
+  </div>
+</div>
+
+<!-- Filters -->
+<div class="sh-card mb-4 p-3">
+  <form method="GET" action="{{ url_for('admin.students') }}" class="row g-2 align-items-center">
+    <div class="col-md-5">
+      <div class="input-group">
+        <span class="input-group-text bg-body-tertiary border-end-0 text-secondary"><i class="bi bi-search"></i></span>
+        <input type="text" name="q" class="form-control border-start-0" placeholder="Search by name, student ID, or email..." value="{{ search_query }}">
+      </div>
+    </div>
+    <div class="col-md-3">
+      <select name="dept_id" class="form-select">
+        <option value="">All Departments</option>
+        {% for d in departments %}
+          <option value="{{ d.id }}" {% if selected_dept == d.id %}selected{% endif %}>{{ d.name }} ({{ d.code }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <select name="sem" class="form-select">
+        <option value="">All Semesters</option>
+        {% for s in range(1, 9) %}
+          <option value="{{ s }}" {% if selected_sem == s %}selected{% endif %}>Semester {{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 d-flex gap-2">
+      <button type="submit" class="btn btn-primary w-100"><i class="bi bi-filter me-1"></i>Filter</button>
+      {% if search_query or selected_dept or selected_sem %}
+        <a href="{{ url_for('admin.students') }}" class="btn btn-outline-secondary" title="Reset Filters"><i class="bi bi-arrow-counterclockwise"></i></a>
+      {% endif %}
+    </div>
+  </form>
+</div>
+
+<!-- Student Table -->
+<div class="sh-card">
+  <div class="table-responsive">
+    <table class="table-custom">
+      <thead>
+        <tr>
+          <th>Student Details</th>
+          <th>Student ID</th>
+          <th>Department & Semester</th>
+          <th>Contact</th>
+          <th class="text-center">Account Status</th>
+          <th class="text-end">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% if students %}
+          {% for s in students %}
+            <tr>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  {% if s.avatar %}
+                    <img src="{{ url_for('static', filename='uploads/avatars/' + s.avatar) }}" class="rounded-circle" width="36" height="36" alt="Avatar">
+                  {% else %}
+                    <img src="{{ url_for('static', filename='uploads/avatars/default-avatar.svg') }}" class="rounded-circle" width="36" height="36" alt="Avatar">
+                  {% endif %}
+                  <div>
+                    <div class="fw-bold">{{ s.full_name }}</div>
+                    <small class="text-secondary">{{ s.user.email }}</small>
+                  </div>
+                </div>
+              </td>
+              <td><span class="badge bg-light text-dark border fw-bold">{{ s.student_id }}</span></td>
+              <td>
+                <div class="fw-semibold">{{ s.department.code }}</div>
+                <small class="text-secondary">Semester {{ s.semester }} &bull; {{ s.academic_year }}</small>
+              </td>
+              <td>
+                <small class="text-secondary"><i class="bi bi-telephone me-1"></i>{{ s.phone or 'Not provided' }}</small>
+              </td>
+              <td class="text-center">
+                {% if s.user.is_active %}
+                  <span class="badge badge-soft-success">Active</span>
+                {% else %}
+                  <span class="badge badge-soft-danger">Deactivated</span>
+                {% endif %}
+              </td>
+              <td class="text-end">
+                <div class="d-inline-flex gap-1">
+                  <a href="{{ url_for('admin.student_detail', student_id=s.id) }}" class="btn btn-sm btn-outline-primary" title="View Full Academic Profile">
+                    <i class="bi bi-eye"></i> View
+                  </a>
+                  <form method="POST" action="{{ url_for('admin.toggle_student_status', student_id=s.id) }}" class="d-inline" onsubmit="return confirm('Change status for this student?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm {% if s.user.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}" title="Toggle Activation">
+                      {% if s.user.is_active %}<i class="bi bi-person-x"></i>{% else %}<i class="bi bi-person-check"></i>{% endif %}
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        {% else %}
+          <tr>
+            <td colspan="6" class="text-center py-5 text-muted">
+              <i class="bi bi-people fs-1 text-secondary mb-2 d-block"></i>
+              No students found matching the selected criteria.
+            </td>
+          </tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

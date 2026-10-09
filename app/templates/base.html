@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}StudentHub — Smart Student Portal{% endblock %}</title>
+  
+  <!-- Google Fonts Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Bootstrap 5.3.3 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  
+  <!-- StudentHub Custom CSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Mobile Backdrop -->
+  <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+  <!-- Sidebar Navigation -->
+  <aside class="app-sidebar">
+    <div class="sidebar-header">
+      <a href="{{ url_for('admin.dashboard') if current_user.is_authenticated and current_user.is_admin else url_for('student.dashboard') }}" class="sidebar-brand">
+        <div class="brand-icon">
+          <i class="bi bi-mortarboard-fill"></i>
+        </div>
+        <span>StudentHub</span>
+      </a>
+    </div>
+
+    <ul class="sidebar-nav">
+      {% if current_user.is_authenticated %}
+        {% if current_user.is_admin %}
+          <li class="nav-section-title">Admin Management</li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('admin.dashboard') }}" class="nav-link-custom {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+              <i class="bi bi-speedometer2"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('admin.students') }}" class="nav-link-custom {% if request.endpoint in ['admin.students', 'admin.student_detail'] %}active{% endif %}">
+              <i class="bi bi-people-fill"></i>
+              <span>Students</span>
+            </a>
+          </li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('admin.departments') }}" class="nav-link-custom {% if request.endpoint == 'admin.departments' %}active{% endif %}">
+              <i class="bi bi-building"></i>
+              <span>Departments</span>
+            </a>
+          </li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('admin.subjects') }}" class="nav-link-custom {% if request.endpoint == 'admin.subjects' %}active{% endif %}">
+              <i class="bi bi-journal-bookmark-fill"></i>
+              <span>Subjects</span>
+            </a>
+          </li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('admin.attendance') }}" class="nav-link-custom {% if request.endpoint == 'admin.attendance' %}active{% endif %}">
+              <i class="bi bi-calendar-check-fill"></i>
+              <span>Attendance</span>
+            </a>
+          </li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('admin.assignments') }}" class="nav-link-custom {% if request.endpoint in ['admin.assignments', 'admin.assignment_submissions'] %}active{% endif %}">
+              <i class="bi bi-file-earmark-text-fill"></i>
+              <span>Assignments</span>
+            </a>
+          </li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('admin.examinations') }}" class="nav-link-custom {% if request.endpoint == 'admin.examinations' %}active{% endif %}">
+              <i class="bi bi-pencil-square"></i>
+              <span>Examinations</span>
+            </a>
+          </li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('admin.results') }}" class="nav-link-custom {% if request.endpoint == 'admin.results' %}active{% endif %}">
+              <i class="bi bi-award-fill"></i>
+              <span>Results</span>
+            </a>
+          </li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('admin.timetable') }}" class="nav-link-custom {% if request.endpoint == 'admin.timetable' %}active{% endif %}">
+              <i class="bi bi-table"></i>
+              <span>Timetable</span>
+            </a>
+          </li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('admin.study_materials') }}" class="nav-link-custom {% if request.endpoint == 'admin.study_materials' %}active{% endif %}">
+              <i class="bi bi-folder-fill"></i>
+              <span>Study Materials</span>
+            </a>
+          </li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('admin.announcements') }}" class="nav-link-custom {% if request.endpoint == 'admin.announcements' %}active{% endif %}">
+              <i class="bi bi-megaphone-fill"></i>
+              <span>Announcements</span>
+            </a>
+          </li>
+
+        {% else %}
+          <!-- Student Navigation -->
+          <li class="nav-section-title">Student Portal</li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('student.dashboard') }}" class="nav-link-custom {% if request.endpoint == 'student.dashboard' %}active{% endif %}">
+              <i class="bi bi-grid-1x2-fill"></i>
+              <span>Dashboard</span>
+            </a>
+          </li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('student.attendance') }}" class="nav-link-custom {% if request.endpoint == 'student.attendance' %}active{% endif %}">
+              <i class="bi bi-calendar2-check-fill"></i>
+              <span>Attendance</span>
+            </a>
+          </li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('student.assignments') }}" class="nav-link-custom {% if request.endpoint in ['student.assignments', 'student.assignment_detail'] %}active{% endif %}">
+              <i class="bi bi-journal-check"></i>
+              <span>Assignments</span>
+            </a>
+          </li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('student.examinations') }}" class="nav-link-custom {% if request.endpoint == 'student.examinations' %}active{% endif %}">
+              <i class="bi bi-award"></i>
+              <span>Exams & Results</span>
+            </a>
+          </li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('student.timetable') }}" class="nav-link-custom {% if request.endpoint == 'student.timetable' %}active{% endif %}">
+              <i class="bi bi-clock-history"></i>
+              <span>Timetable</span>
+            </a>
+          </li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('student.study_materials') }}" class="nav-link-custom {% if request.endpoint == 'student.study_materials' %}active{% endif %}">
+              <i class="bi bi-book-half"></i>
+              <span>Study Materials</span>
+            </a>
+          </li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('student.announcements') }}" class="nav-link-custom {% if request.endpoint == 'student.announcements' %}active{% endif %}">
+              <i class="bi bi-bell-fill"></i>
+              <span>Announcements</span>
+            </a>
+          </li>
+          <li class="nav-item-custom">
+            <a href="{{ url_for('student.profile') }}" class="nav-link-custom {% if request.endpoint == 'student.profile' %}active{% endif %}">
+              <i class="bi bi-person-circle"></i>
+              <span>My Profile</span>
+            </a>
+          </li>
+        {% endif %}
+      {% endif %}
+    </ul>
+
+    <!-- Sidebar Footer Profile -->
+    <div class="sidebar-footer">
+      <div class="user-mini-card">
+        {% if current_user.is_authenticated and current_user.student_profile and current_user.student_profile.avatar %}
+          <img src="{{ url_for('static', filename='uploads/avatars/' + current_user.student_profile.avatar) }}" class="user-avatar-sm" alt="Avatar">
+        {% else %}
+          <img src="{{ url_for('static', filename='uploads/avatars/default-avatar.svg') }}" class="user-avatar-sm" alt="Avatar">
+        {% endif %}
+        <div class="user-details overflow-hidden">
+          <div class="text-truncate fw-semibold text-white small">
+            {% if current_user.is_authenticated and current_user.student_profile %}
+              {{ current_user.student_profile.full_name }}
+            {% else %}
+              {{ current_user.username }}
+            {% endif %}
+          </div>
+          <div class="text-secondary" style="font-size: 0.725rem;">
+            <span class="badge bg-primary-subtle text-primary">{{ current_user.role|capitalize }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content Wrapper -->
+  <div class="main-content-wrapper">
+    <!-- Top Navigation Bar -->
+    <header class="app-topbar">
+      <div class="d-flex align-items-center gap-3">
+        <button class="btn btn-sm btn-light border-0" id="sidebar-toggle" title="Toggle Sidebar">
+          <i class="bi bi-list fs-5"></i>
+        </button>
+        <span class="fw-semibold text-secondary d-none d-md-inline" style="font-size: 0.875rem;">
+          {% block page_breadcrumb %}Academic Portal{% endblock %}
+        </span>
+      </div>
+
+      <div class="d-flex align-items-center gap-3">
+        <!-- Theme Switcher -->
+        <button class="theme-toggle-btn" id="theme-toggle" title="Toggle Theme">
+          <i class="bi bi-moon-stars-fill" id="theme-icon"></i>
+        </button>
+
+        <!-- Notification Bell Dropdown -->
+        <div class="dropdown">
+          <button class="theme-toggle-btn position-relative" data-bs-toggle="dropdown" aria-expanded="false" title="Notifications">
+            <i class="bi bi-bell"></i>
+            {% if unread_notifications_count > 0 %}
+              <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="font-size: 0.65rem;">
+                {{ unread_notifications_count }}
+              </span>
+            {% endif %}
+          </button>
+          <div class="dropdown-menu dropdown-menu-end notification-menu shadow-lg p-0">
+            <div class="d-flex justify-content-between align-items-center p-3 border-bottom">
+              <span class="fw-bold small">Notifications</span>
+              {% if unread_notifications_count > 0 %}
+                <a href="{{ url_for('student.mark_all_notifications_read') }}" class="badge bg-light text-primary text-decoration-none">Mark all read</a>
+              {% endif %}
+            </div>
+            {% if recent_notifications %}
+              {% for notif in recent_notifications %}
+                <a href="{{ url_for('student.mark_notification_read', notif_id=notif.id) }}" class="notification-item {% if not notif.is_read %}unread{% endif %}">
+                  <div class="fw-semibold">{{ notif.title }}</div>
+                  <div class="text-secondary small text-truncate">{{ notif.message }}</div>
+                  <div class="text-muted" style="font-size: 0.7rem;">{{ notif.created_at|format_datetime }}</div>
+                </a>
+              {% endfor %}
+            {% else %}
+              <div class="p-3 text-center text-muted small">No notifications at this time.</div>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- User Dropdown Menu -->
+        <div class="dropdown">
+          <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" data-bs-toggle="dropdown">
+            {% if current_user.is_authenticated and current_user.student_profile and current_user.student_profile.avatar %}
+              <img src="{{ url_for('static', filename='uploads/avatars/' + current_user.student_profile.avatar) }}" class="rounded-circle" width="36" height="36" alt="Avatar">
+            {% else %}
+              <img src="{{ url_for('static', filename='uploads/avatars/default-avatar.svg') }}" class="rounded-circle" width="36" height="36" alt="Avatar">
+            {% endif %}
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+            <li class="px-3 py-2 border-bottom">
+              <div class="fw-bold">{{ current_user.username }}</div>
+              <div class="text-muted small">{{ current_user.email }}</div>
+            </li>
+            {% if current_user.is_student %}
+              <li><a class="dropdown-item" href="{{ url_for('student.profile') }}"><i class="bi bi-person me-2"></i>My Profile</a></li>
+              <li><a class="dropdown-item" href="{{ url_for('student.attendance') }}"><i class="bi bi-calendar2-check me-2"></i>My Attendance</a></li>
+            {% endif %}
+            <li><hr class="dropdown-divider"></li>
+            <li><a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i>Log Out</a></li>
+          </ul>
+        </div>
+      </div>
+    </header>
+
+    <!-- Page Body -->
+    <main class="page-content">
+      <!-- Flash Messages -->
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, message in messages %}
+            <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show shadow-sm" role="alert">
+              <i class="bi {% if category == 'success' %}bi-check-circle-fill{% elif category == 'danger' %}bi-exclamation-triangle-fill{% else %}bi-info-circle-fill{% endif %} me-2"></i>
+              {{ message }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-3 px-4 border-top text-center text-muted small mt-auto" style="background-color: var(--sh-card-bg);">
+      &copy; 2026 StudentHub — Smart Student Portal. Built with Flask, SQLite & Modern UI.
+    </footer>
+  </div>
+</div>
+
+<!-- Bootstrap 5.3.3 Bundle JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Chart.js 4.4 -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<!-- StudentHub Main JS -->
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+
+</body>
+</html>

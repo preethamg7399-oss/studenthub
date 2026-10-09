@@ -1,0 +1,148 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Register — StudentHub{% endblock %}
+{% block col_class %}col-md-8 col-lg-7{% endblock %}
+
+{% block auth_content %}
+<div class="mb-4">
+  <h4 class="fw-bold mb-1">Create Student Account</h4>
+  <p class="text-secondary small">Register your student profile to access courses, attendance, exams, and resources.</p>
+</div>
+
+<form method="POST" action="{{ url_for('auth.register') }}" novalidate>
+  {{ form.hidden_tag() }}
+
+  <div class="row g-3">
+    <!-- Full Name -->
+    <div class="col-md-6">
+      <label class="form-label small fw-semibold text-secondary">Full Name *</label>
+      <div class="input-group">
+        <span class="input-group-text bg-body-tertiary border-end-0 text-secondary"><i class="bi bi-person-badge"></i></span>
+        {{ form.full_name(class="form-control border-start-0" + (" is-invalid" if form.full_name.errors else ""), placeholder="e.g. Alex Morgan") }}
+      </div>
+      {% for error in form.full_name.errors %}
+        <div class="text-danger small mt-1">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Student ID -->
+    <div class="col-md-6">
+      <label class="form-label small fw-semibold text-secondary">Student ID / Roll No. *</label>
+      <div class="input-group">
+        <span class="input-group-text bg-body-tertiary border-end-0 text-secondary"><i class="bi bi-card-text"></i></span>
+        {{ form.student_id(class="form-control border-start-0" + (" is-invalid" if form.student_id.errors else ""), placeholder="e.g. STU2026101") }}
+      </div>
+      {% for error in form.student_id.errors %}
+        <div class="text-danger small mt-1">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Username -->
+    <div class="col-md-6">
+      <label class="form-label small fw-semibold text-secondary">Username *</label>
+      <div class="input-group">
+        <span class="input-group-text bg-body-tertiary border-end-0 text-secondary"><i class="bi bi-at"></i></span>
+        {{ form.username(class="form-control border-start-0" + (" is-invalid" if form.username.errors else ""), placeholder="e.g. alex2026") }}
+      </div>
+      {% for error in form.username.errors %}
+        <div class="text-danger small mt-1">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Email -->
+    <div class="col-md-6">
+      <label class="form-label small fw-semibold text-secondary">Email Address *</label>
+      <div class="input-group">
+        <span class="input-group-text bg-body-tertiary border-end-0 text-secondary"><i class="bi bi-envelope"></i></span>
+        {{ form.email(class="form-control border-start-0" + (" is-invalid" if form.email.errors else ""), placeholder="alex@campus.edu") }}
+      </div>
+      {% for error in form.email.errors %}
+        <div class="text-danger small mt-1">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Department -->
+    <div class="col-md-6">
+      <label class="form-label small fw-semibold text-secondary">Department / Branch *</label>
+      <div class="input-group">
+        <span class="input-group-text bg-body-tertiary border-end-0 text-secondary"><i class="bi bi-building"></i></span>
+        {{ form.department_id(class="form-select border-start-0" + (" is-invalid" if form.department_id.errors else "")) }}
+      </div>
+      {% for error in form.department_id.errors %}
+        <div class="text-danger small mt-1">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Semester -->
+    <div class="col-md-3">
+      <label class="form-label small fw-semibold text-secondary">Semester *</label>
+      <div class="input-group">
+        <span class="input-group-text bg-body-tertiary border-end-0 text-secondary"><i class="bi bi-layers"></i></span>
+        {{ form.semester(class="form-select border-start-0" + (" is-invalid" if form.semester.errors else "")) }}
+      </div>
+      {% for error in form.semester.errors %}
+        <div class="text-danger small mt-1">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Academic Year -->
+    <div class="col-md-3">
+      <label class="form-label small fw-semibold text-secondary">Academic Year *</label>
+      <div class="input-group">
+        <span class="input-group-text bg-body-tertiary border-end-0 text-secondary"><i class="bi bi-calendar"></i></span>
+        {{ form.academic_year(class="form-control border-start-0" + (" is-invalid" if form.academic_year.errors else ""), placeholder="2025-2026") }}
+      </div>
+      {% for error in form.academic_year.errors %}
+        <div class="text-danger small mt-1">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Password -->
+    <div class="col-md-6">
+      <label class="form-label small fw-semibold text-secondary">Password *</label>
+      <div class="input-group">
+        <span class="input-group-text bg-body-tertiary border-end-0 text-secondary"><i class="bi bi-lock"></i></span>
+        {{ form.password(class="form-control border-start-0" + (" is-invalid" if form.password.errors else ""), placeholder="At least 6 characters") }}
+      </div>
+      {% for error in form.password.errors %}
+        <div class="text-danger small mt-1">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Confirm Password -->
+    <div class="col-md-6">
+      <label class="form-label small fw-semibold text-secondary">Confirm Password *</label>
+      <div class="input-group">
+        <span class="input-group-text bg-body-tertiary border-end-0 text-secondary"><i class="bi bi-shield-check"></i></span>
+        {{ form.confirm_password(class="form-control border-start-0" + (" is-invalid" if form.confirm_password.errors else ""), placeholder="Repeat password") }}
+      </div>
+      {% for error in form.confirm_password.errors %}
+        <div class="text-danger small mt-1">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <!-- Phone -->
+    <div class="col-12">
+      <label class="form-label small fw-semibold text-secondary">Contact Phone Number (Optional)</label>
+      <div class="input-group">
+        <span class="input-group-text bg-body-tertiary border-end-0 text-secondary"><i class="bi bi-telephone"></i></span>
+        {{ form.phone(class="form-control border-start-0" + (" is-invalid" if form.phone.errors else ""), placeholder="+1 (555) 019-2834") }}
+      </div>
+      {% for error in form.phone.errors %}
+        <div class="text-danger small mt-1">{{ error }}</div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="d-grid mt-4">
+    <button type="submit" class="btn btn-primary py-2 fw-semibold shadow-sm" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+      <i class="bi bi-person-plus-fill me-1"></i> Register Student Account
+    </button>
+  </div>
+</form>
+
+<div class="text-center pt-3 border-top mt-4">
+  <span class="text-secondary small">Already have an account?</span>
+  <a href="{{ url_for('auth.login') }}" class="small fw-semibold text-primary text-decoration-none ms-1">Sign In</a>
+</div>
+{% endblock %}

@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Assignments — StudentHub{% endblock %}
+{% block page_breadcrumb %}Administration / Coursework Assignments{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Coursework Assignments</h3>
+    <p class="text-secondary small mb-0">Create new course assignments, attach problem sheets, and review submissions</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Publish Assignment Form -->
+  <div class="col-lg-5">
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3 border-bottom pb-2">Publish New Assignment</h5>
+      <form method="POST" action="{{ url_for('admin.assignments') }}" enctype="multipart/form-data" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Subject *</label>
+          {{ form.subject_id(class="form-select" + (" is-invalid" if form.subject_id.errors else "")) }}
+          {% for error in form.subject_id.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Assignment Title *</label>
+          {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="e.g. Lab Project 1 - ER Diagram") }}
+          {% for error in form.title.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Instructions / Requirements *</label>
+          {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=4, placeholder="Detailed problem statement and instructions...") }}
+          {% for error in form.description.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-sm-7">
+            <label class="form-label small fw-semibold text-secondary">Due Date & Time *</label>
+            {{ form.due_date(class="form-control" + (" is-invalid" if form.due_date.errors else ""), type="datetime-local") }}
+            {% for error in form.due_date.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+          <div class="col-sm-5">
+            <label class="form-label small fw-semibold text-secondary">Max Marks *</label>
+            {{ form.max_marks(class="form-control" + (" is-invalid" if form.max_marks.errors else "")) }}
+            {% for error in form.max_marks.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Attach File (Optional)</label>
+          {{ form.attachment(class="form-control" + (" is-invalid" if form.attachment.errors else "")) }}
+          <div class="form-text small">PDF, DOC, ZIP, or Code template file.</div>
+          {% for error in form.attachment.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="d-grid mt-4">
+          <button type="submit" class="btn btn-primary fw-semibold">
+            <i class="bi bi-file-earmark-plus me-1"></i> Publish Assignment
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Assignments List -->
+  <div class="col-lg-7">
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3">Published Assignments ({{ assignments|length }})</h5>
+      <div class="table-responsive">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Title & Subject</th>
+              <th>Due Date</th>
+              <th class="text-center">Submissions</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if assignments %}
+              {% for a in assignments %}
+                <tr>
+                  <td>
+                    <div class="fw-bold">{{ a.title }}</div>
+                    <span class="badge bg-primary-subtle text-primary">{{ a.subject.code }}</span>
+                    <small class="text-secondary">&bull; Max {{ a.max_marks }} pts</small>
+                  </td>
+                  <td>
+                    <div class="small fw-semibold"><i class="bi bi-clock me-1 text-secondary"></i>{{ a.due_date|format_datetime }}</div>
+                  </td>
+                  <td class="text-center">
+                    <span class="badge bg-light text-dark border fs-6">{{ a.submissions.count() }}</span>
+                  </td>
+                  <td class="text-end">
+                    <div class="d-inline-flex gap-1">
+                      <a href="{{ url_for('admin.assignment_submissions', assign_id=a.id) }}" class="btn btn-sm btn-outline-primary" title="Review Submissions">
+                        <i class="bi bi-inbox me-1"></i> Review
+                      </a>
+                      <form method="POST" action="{{ url_for('admin.delete_assignment', assign_id=a.id) }}" class="d-inline" onsubmit="return confirm('Delete this assignment and all submissions?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="4" class="text-center py-4 text-muted">
+                  No assignments posted yet.
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

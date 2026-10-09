@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Study Materials — StudentHub{% endblock %}
+{% block page_breadcrumb %}Administration / Study Materials{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Learning Resource Repository</h3>
+    <p class="text-secondary small mb-0">Upload lecture handouts, previous question papers, and course syllabi</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Upload Material Form -->
+  <div class="col-lg-4">
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3 border-bottom pb-2">Upload New Material</h5>
+      <form method="POST" action="{{ url_for('admin.study_materials') }}" enctype="multipart/form-data" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Subject *</label>
+          {{ form.subject_id(class="form-select" + (" is-invalid" if form.subject_id.errors else "")) }}
+          {% for error in form.subject_id.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Material Title *</label>
+          {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="e.g. Unit 3 - Relational Algebra Notes") }}
+          {% for error in form.title.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Resource Category *</label>
+          {{ form.material_type(class="form-select" + (" is-invalid" if form.material_type.errors else "")) }}
+          {% for error in form.material_type.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Description / Topics Covered</label>
+          {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=3, placeholder="Summary of topics...") }}
+          {% for error in form.description.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Select Document File *</label>
+          {{ form.file(class="form-control" + (" is-invalid" if form.file.errors else "")) }}
+          <div class="form-text small">Allowed: PDF, DOC, PPT, ZIP, TXT. Max 16MB.</div>
+          {% for error in form.file.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="d-grid mt-4">
+          <button type="submit" class="btn btn-primary fw-semibold">
+            <i class="bi bi-cloud-arrow-up-fill me-1"></i> Upload Resource
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Uploaded Materials Table -->
+  <div class="col-lg-8">
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3">Available Materials ({{ materials|length }})</h5>
+      <div class="table-responsive">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Title & Subject</th>
+              <th>Category</th>
+              <th>Uploaded Date</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if materials %}
+              {% for m in materials %}
+                <tr>
+                  <td>
+                    <div class="fw-bold">{{ m.title }}</div>
+                    <small class="badge bg-secondary-subtle text-secondary">{{ m.subject.code }} - {{ m.subject.name }}</small>
+                  </td>
+                  <td>
+                    <span class="badge {% if m.material_type == 'Lecture Notes' %}badge-soft-success{% elif m.material_type == 'Previous Question Paper' %}badge-soft-warning{% elif m.material_type == 'Syllabus' %}badge-soft-info{% else %}badge-soft-primary{% endif %}">
+                      {{ m.material_type }}
+                    </span>
+                  </td>
+                  <td class="small text-secondary">{{ m.uploaded_at|format_date }}</td>
+                  <td class="text-end">
+                    <div class="d-inline-flex gap-1">
+                      <a href="{{ url_for('student.download_file', folder='materials', filename=m.file_path) }}" class="btn btn-sm btn-outline-primary" title="Download">
+                        <i class="bi bi-download"></i>
+                      </a>
+                      <form method="POST" action="{{ url_for('admin.delete_study_material', material_id=m.id) }}" class="d-inline" onsubmit="return confirm('Delete this study material?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                          <i class="bi bi-trash"></i>
+                        </button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="4" class="text-center py-4 text-muted">No study materials uploaded yet.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}{{ assignment.title }} — StudentHub{% endblock %}
+{% block page_breadcrumb %}Student Portal / Assignments / {{ assignment.title }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <a href="{{ url_for('student.assignments') }}" class="btn btn-sm btn-outline-secondary mb-2">
+    <i class="bi bi-arrow-left me-1"></i> Back to Assignments
+  </a>
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <h3 class="fw-bold mb-0">{{ assignment.title }}</h3>
+    <span class="badge bg-primary-subtle text-primary fs-6">{{ assignment.subject.code }} — {{ assignment.subject.name }}</span>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Assignment Details & Resources -->
+  <div class="col-lg-7">
+    <div class="sh-card mb-4">
+      <h5 class="fw-bold mb-3 border-bottom pb-2">Assignment Brief</h5>
+      <div class="text-secondary mb-4" style="white-space: pre-line; line-height: 1.6;">
+        {{ assignment.description }}
+      </div>
+
+      <div class="row g-3 p-3 bg-body-tertiary rounded border mb-3">
+        <div class="col-sm-6">
+          <small class="text-secondary d-block">Assigned Date</small>
+          <span class="fw-semibold"><i class="bi bi-calendar-check me-1"></i>{{ assignment.assigned_date|format_date }}</span>
+        </div>
+        <div class="col-sm-6">
+          <small class="text-secondary d-block">Submission Deadline</small>
+          <span class="fw-semibold text-danger"><i class="bi bi-clock-history me-1"></i>{{ assignment.due_date|format_datetime }}</span>
+        </div>
+        <div class="col-sm-6">
+          <small class="text-secondary d-block">Max Points</small>
+          <span class="fw-semibold"><i class="bi bi-award me-1"></i>{{ assignment.max_marks }} Marks</span>
+        </div>
+        <div class="col-sm-6">
+          <small class="text-secondary d-block">Instructor In-Charge</small>
+          <span class="fw-semibold"><i class="bi bi-person me-1"></i>{{ assignment.subject.faculty_name }}</span>
+        </div>
+      </div>
+
+      <!-- Instructor Attachment if provided -->
+      {% if assignment.file_attachment %}
+        <div class="p-3 border rounded d-flex justify-content-between align-items-center">
+          <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-paperclip fs-4 text-primary"></i>
+            <div>
+              <div class="fw-semibold small">Reference / Prompt Document</div>
+              <small class="text-secondary">Download instructions provided by faculty</small>
+            </div>
+          </div>
+          <a href="{{ url_for('student.download_file', folder='assignments', filename=assignment.file_attachment.replace('assignments/', '')) }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-download me-1"></i> Download
+          </a>
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Instructor Feedback Card if graded -->
+    {% if submission and submission.marks_obtained is not None %}
+      <div class="sh-card border-success">
+        <h5 class="fw-bold text-success mb-3"><i class="bi bi-check-circle-fill me-2"></i>Grading & Evaluation</h5>
+        <div class="d-flex align-items-center justify-content-between p-3 bg-success-subtle rounded mb-3">
+          <div>
+            <div class="small text-secondary">Awarded Score</div>
+            <div class="display-6 fw-bold text-success">{{ submission.marks_obtained }} / {{ assignment.max_marks }}</div>
+          </div>
+          <div class="text-end">
+            <span class="badge bg-success fs-6">{{ (submission.marks_obtained / assignment.max_marks * 100)|round(1) }}%</span>
+            <div class="small text-muted mt-1">Graded on {{ submission.graded_at|format_date }}</div>
+          </div>
+        </div>
+
+        {% if submission.feedback %}
+          <div class="border-top pt-3">
+            <label class="fw-semibold small text-secondary">Instructor Comments:</label>
+            <p class="mb-0 text-secondary bg-body-tertiary p-3 rounded fst-italic">{{ submission.feedback }}</p>
+          </div>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Student Submission Form -->
+  <div class="col-lg-5">
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3 border-bottom pb-2">
+        {% if submission %}Your Submission{% else %}Submit Assignment{% endif %}
+      </h5>
+
+      {% if submission %}
+        <div class="alert alert-info py-2 px-3 small mb-3">
+          <i class="bi bi-info-circle me-1"></i>
+          Submitted on <strong>{{ submission.submitted_at|format_datetime }}</strong>
+          {% if submission.status == 'Late' %}
+            <span class="badge bg-danger ms-1">Late Submission</span>
+          {% endif %}
+        </div>
+
+        {% if submission.file_path %}
+          <div class="p-3 mb-3 rounded bg-body-tertiary border d-flex justify-content-between align-items-center">
+            <div class="overflow-hidden me-2">
+              <i class="bi bi-file-earmark-check text-success me-1"></i>
+              <span class="small fw-semibold text-truncate d-inline-block" style="max-width: 180px;">
+                {{ submission.file_path.replace('submissions/', '') }}
+              </span>
+            </div>
+            <a href="{{ url_for('student.download_file', folder='submissions', filename=submission.file_path.replace('submissions/', '')) }}" class="btn btn-sm btn-outline-primary">
+              <i class="bi bi-download"></i> View
+            </a>
+          </div>
+        {% endif %}
+      {% endif %}
+
+      <form method="POST" enctype="multipart/form-data" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Submission Notes / Written Answer</label>
+          {{ form.submission_text(class="form-control" + (" is-invalid" if form.submission_text.errors else ""), rows=5, placeholder="Add your project notes, GitHub link, or answers here...", value=(submission.submission_text if submission else "")) }}
+          {% for error in form.submission_text.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Upload File (PDF, DOCX, ZIP, Code)</label>
+          {{ form.submission_file(class="form-control" + (" is-invalid" if form.submission_file.errors else "")) }}
+          <div class="form-text small">Accepted file types: PDF, Word, ZIP archive, or source code. Max 16MB.</div>
+          {% for error in form.submission_file.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="d-grid mt-4">
+          <button type="submit" class="btn btn-primary py-2 fw-semibold">
+            <i class="bi bi-cloud-arrow-up-fill me-1"></i>
+            {% if submission %}Update Submission{% else %}Submit Assignment{% endif %}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

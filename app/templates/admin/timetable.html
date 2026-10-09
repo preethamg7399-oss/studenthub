@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Timetable — StudentHub{% endblock %}
+{% block page_breadcrumb %}Administration / Timetable Configuration{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Timetable Configuration</h3>
+    <p class="text-secondary small mb-0">Define class periods, faculty assignments, classroom halls, and breaks</p>
+  </div>
+</div>
+
+<!-- Department & Semester Selector -->
+<div class="sh-card mb-4 p-3">
+  <form method="GET" action="{{ url_for('admin.timetable') }}" class="row g-2 align-items-end">
+    <div class="col-md-5">
+      <label class="form-label small fw-semibold text-secondary">Department</label>
+      <select name="dept_id" class="form-select" onchange="this.form.submit()">
+        {% for d in departments %}
+          <option value="{{ d.id }}" {% if selected_dept == d.id %}selected{% endif %}>{{ d.name }} ({{ d.code }})</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-5">
+      <label class="form-label small fw-semibold text-secondary">Semester</label>
+      <select name="sem" class="form-select" onchange="this.form.submit()">
+        {% for s in range(1, 9) %}
+          <option value="{{ s }}" {% if selected_sem == s %}selected{% endif %}>Semester {{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-primary w-100"><i class="bi bi-arrow-clockwise me-1"></i>View</button>
+    </div>
+  </form>
+</div>
+
+<div class="row g-4">
+  <!-- Add Entry Form -->
+  <div class="col-lg-4">
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3 border-bottom pb-2">Add Schedule Slot</h5>
+      <form method="POST" action="{{ url_for('admin.timetable') }}" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Department *</label>
+          {{ form.department_id(class="form-select" + (" is-invalid" if form.department_id.errors else "")) }}
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label small fw-semibold text-secondary">Semester *</label>
+            {{ form.semester(class="form-select" + (" is-invalid" if form.semester.errors else "")) }}
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold text-secondary">Day *</label>
+            {{ form.day_of_week(class="form-select" + (" is-invalid" if form.day_of_week.errors else "")) }}
+          </div>
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label small fw-semibold text-secondary">Start Time *</label>
+            {{ form.start_time(class="form-control" + (" is-invalid" if form.start_time.errors else "")) }}
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold text-secondary">End Time *</label>
+            {{ form.end_time(class="form-control" + (" is-invalid" if form.end_time.errors else "")) }}
+          </div>
+        </div>
+
+        <div class="form-check mb-3">
+          {{ form.is_break(class="form-check-input", id="is_break") }}
+          <label class="form-check-label small fw-semibold text-secondary" for="is_break">
+            Mark as Break Period (Recess / Lunch)
+          </label>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Break Title (if Break)</label>
+          {{ form.break_title(class="form-control", placeholder="e.g. Lunch Recess") }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Subject (if Class)</label>
+          {{ form.subject_id(class="form-select") }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Classroom / Lab</label>
+          {{ form.classroom(class="form-control", placeholder="e.g. Hall A-204 or Lab 3") }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Faculty Name</label>
+          {{ form.faculty_name(class="form-control", placeholder="e.g. Dr. Jane Smith") }}
+        </div>
+
+        <div class="d-grid mt-4">
+          <button type="submit" class="btn btn-primary fw-semibold">
+            <i class="bi bi-plus-circle me-1"></i> Add Timetable Slot
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Timetable Entries Table -->
+  <div class="col-lg-8">
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3">Current Timetable ({{ entries|length }} Slots)</h5>
+      <div class="table-responsive">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Day & Time</th>
+              <th>Period Type / Subject</th>
+              <th>Venue</th>
+              <th>Faculty</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if entries %}
+              {% for e in entries %}
+                <tr>
+                  <td>
+                    <div class="fw-bold">{{ e.day_of_week }}</div>
+                    <small class="badge bg-light text-dark border">
+                      {{ e.start_time|format_time }} – {{ e.end_time|format_time }}
+                    </small>
+                  </td>
+                  <td>
+                    {% if e.is_break %}
+                      <span class="badge bg-warning-subtle text-warning fs-6">{{ e.break_title or 'Break Period' }}</span>
+                    {% else %}
+                      <div class="fw-semibold">{{ e.subject.name if e.subject else 'Class' }}</div>
+                      <small class="badge bg-secondary-subtle text-secondary">{{ e.subject.code if e.subject else '' }}</small>
+                    {% endif %}
+                  </td>
+                  <td>{{ e.classroom or '—' }}</td>
+                  <td class="small text-secondary">{{ e.faculty_name or (e.subject.faculty_name if e.subject else '—') }}</td>
+                  <td class="text-end">
+                    <form method="POST" action="{{ url_for('admin.delete_timetable_entry', entry_id=e.id) }}" class="d-inline" onsubmit="return confirm('Delete this slot?');">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="5" class="text-center py-4 text-muted">
+                  No slots configured for this department and semester.
+                </td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

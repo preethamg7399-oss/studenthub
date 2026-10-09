@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Announcements & Notices — StudentHub{% endblock %}
+{% block page_breadcrumb %}Student Portal / Announcements{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Campus Announcements & Notices</h3>
+    <p class="text-secondary small mb-0">Official circulars, exam dates, college holidays, and department news</p>
+  </div>
+</div>
+
+<!-- Category Tabs and Search -->
+<div class="sh-card mb-4 p-3">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+    <!-- Category pills -->
+    <ul class="nav nav-pills gap-1 flex-wrap">
+      <li class="nav-item">
+        <a class="nav-link btn-sm {% if current_category == 'all' %}active{% endif %}" href="{{ url_for('student.announcements', category='all', q=search_query) }}">All</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link btn-sm {% if current_category == 'Academic' %}active{% endif %}" href="{{ url_for('student.announcements', category='Academic', q=search_query) }}">Academic</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link btn-sm {% if current_category == 'Examination' %}active{% endif %}" href="{{ url_for('student.announcements', category='Examination', q=search_query) }}">Examination</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link btn-sm {% if current_category == 'Assignment' %}active{% endif %}" href="{{ url_for('student.announcements', category='Assignment', q=search_query) }}">Assignments</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link btn-sm {% if current_category == 'Holiday' %}active{% endif %}" href="{{ url_for('student.announcements', category='Holiday', q=search_query) }}">Holidays</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link btn-sm {% if current_category == 'Event' %}active{% endif %}" href="{{ url_for('student.announcements', category='Event', q=search_query) }}">Events</a>
+      </li>
+    </ul>
+
+    <!-- Quick Search -->
+    <form method="GET" action="{{ url_for('student.announcements') }}" class="d-flex gap-2" style="max-width: 300px;">
+      <input type="hidden" name="category" value="{{ current_category }}">
+      <div class="input-group input-group-sm">
+        <input type="text" name="q" class="form-control" placeholder="Search notices..." value="{{ search_query }}">
+        <button class="btn btn-primary" type="submit"><i class="bi bi-search"></i></button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Announcements Feed -->
+<div class="row g-3">
+  {% if announcements %}
+    {% for ann in announcements %}
+      <div class="col-12">
+        <div class="sh-card mb-0 {% if ann.is_pinned %}border-primary border-2{% endif %}">
+          <div class="d-flex justify-content-between align-items-start mb-2 flex-wrap gap-2">
+            <div class="d-flex align-items-center gap-2">
+              {% if ann.is_pinned %}
+                <span class="badge bg-primary"><i class="bi bi-pin-angle-fill me-1"></i>Pinned Notice</span>
+              {% endif %}
+              <span class="badge {% if ann.category == 'Examination' %}bg-danger-subtle text-danger{% elif ann.category == 'Assignment' %}bg-warning-subtle text-warning{% elif ann.category == 'Event' %}bg-success-subtle text-success{% elif ann.category == 'Holiday' %}bg-info-subtle text-info{% else %}bg-primary-subtle text-primary{% endif %}">
+                {{ ann.category }}
+              </span>
+              {% if ann.priority == 'Urgent' %}
+                <span class="badge bg-danger"><i class="bi bi-exclamation-diamond me-1"></i>Urgent</span>
+              {% elif ann.priority == 'Important' %}
+                <span class="badge bg-warning text-dark">Important</span>
+              {% endif %}
+            </div>
+            <div class="text-secondary small">
+              <i class="bi bi-clock me-1"></i>{{ ann.created_at|format_datetime }}
+            </div>
+          </div>
+
+          <h5 class="fw-bold mb-2">{{ ann.title }}</h5>
+          <div class="text-secondary mb-3" style="white-space: pre-line; line-height: 1.6;">
+            {{ ann.content }}
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center pt-2 border-top text-secondary small">
+            <span><i class="bi bi-building me-1"></i>{{ ann.department.name if ann.department else 'Campus-wide (All Departments)' }}</span>
+            <span><i class="bi bi-shield-check me-1"></i>Verified Academic Notice</span>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="col-12 text-center py-5">
+      <div class="sh-card p-5">
+        <i class="bi bi-megaphone fs-1 text-secondary mb-2 d-block"></i>
+        <h5 class="fw-bold">No Announcements Found</h5>
+        <p class="text-secondary small mb-0">No notices posted under this filter category.</p>
+      </div>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

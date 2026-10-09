@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}Student Details: {{ student.full_name }} — StudentHub{% endblock %}
+{% block page_breadcrumb %}Administration / Students / {{ student.student_id }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <a href="{{ url_for('admin.students') }}" class="btn btn-sm btn-outline-secondary mb-2">
+    <i class="bi bi-arrow-left me-1"></i> Back to Student Directory
+  </a>
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <h3 class="fw-bold mb-0">{{ student.full_name }}</h3>
+    <span class="badge bg-primary fs-6">{{ student.student_id }}</span>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- Bio / Info Card -->
+  <div class="col-lg-4">
+    <div class="sh-card text-center mb-4">
+      {% if student.avatar %}
+        <img src="{{ url_for('static', filename='uploads/avatars/' + student.avatar) }}" class="rounded-circle border border-3 border-primary shadow mb-3" width="96" height="96" alt="Avatar">
+      {% else %}
+        <img src="{{ url_for('static', filename='uploads/avatars/default-avatar.svg') }}" class="rounded-circle border border-3 border-primary shadow mb-3" width="96" height="96" alt="Avatar">
+      {% endif %}
+      <h5 class="fw-bold mb-1">{{ student.full_name }}</h5>
+      <p class="text-secondary small mb-3">{{ student.user.email }}</p>
+
+      <div class="p-3 bg-body-tertiary rounded border text-start small">
+        <div class="d-flex justify-content-between py-1 border-bottom">
+          <span class="text-secondary">Department:</span>
+          <span class="fw-semibold">{{ student.department.name }} ({{ student.department.code }})</span>
+        </div>
+        <div class="d-flex justify-content-between py-1 border-bottom">
+          <span class="text-secondary">Semester:</span>
+          <span class="fw-semibold">Semester {{ student.semester }}</span>
+        </div>
+        <div class="d-flex justify-content-between py-1 border-bottom">
+          <span class="text-secondary">Academic Year:</span>
+          <span class="fw-semibold">{{ student.academic_year }}</span>
+        </div>
+        <div class="d-flex justify-content-between py-1 border-bottom">
+          <span class="text-secondary">Phone:</span>
+          <span class="fw-semibold">{{ student.phone or 'N/A' }}</span>
+        </div>
+        <div class="d-flex justify-content-between py-1">
+          <span class="text-secondary">Address:</span>
+          <span class="fw-semibold text-truncate" style="max-width: 160px;">{{ student.address or 'N/A' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Attendance Card -->
+    <div class="sh-card">
+      <h6 class="fw-bold mb-2">Attendance Summary</h6>
+      <div class="d-flex justify-content-between align-items-center mb-1">
+        <span class="fs-3 fw-bold {% if attendance_pct < 75 %}text-danger{% else %}text-success{% endif %}">{{ attendance_pct }}%</span>
+        <span class="small text-secondary">{{ present_classes }} / {{ total_classes }} classes</span>
+      </div>
+      <div class="progress progress-attendance mb-2">
+        <div class="progress-bar {% if attendance_pct >= 85 %}bg-success{% elif attendance_pct >= 75 %}bg-warning{% else %}bg-danger{% endif %}"
+             style="width: {{ attendance_pct }}%"></div>
+      </div>
+      {% if attendance_pct < 75 and total_classes > 0 %}
+        <div class="badge bg-danger-subtle text-danger w-100 py-1">Warning: Attendance below 75% threshold</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Academic Records Tabs -->
+  <div class="col-lg-8">
+    <div class="sh-card">
+      <ul class="nav nav-tabs mb-3" id="adminStudentTabs" role="tablist">
+        <li class="nav-item">
+          <button class="nav-link active fw-semibold" data-bs-toggle="tab" data-bs-target="#enrolled-courses" type="button">
+            Enrolled Subjects ({{ enrollments|length }})
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link fw-semibold" data-bs-toggle="tab" data-bs-target="#student-results" type="button">
+            Exam Results ({{ results|length }})
+          </button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link fw-semibold" data-bs-toggle="tab" data-bs-target="#student-submissions" type="button">
+            Submissions ({{ submissions|length }})
+          </button>
+        </li>
+      </ul>
+
+      <div class="tab-content" id="adminStudentTabsContent">
+        <!-- Enrolled Courses -->
+        <div class="tab-pane fade show active" id="enrolled-courses">
+          {% if enrollments %}
+            <div class="table-responsive">
+              <table class="table-custom">
+                <thead>
+                  <tr>
+                    <th>Subject Code</th>
+                    <th>Subject Name</th>
+                    <th>Credits</th>
+                    <th>Faculty</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for e in enrollments %}
+                    <tr>
+                      <td><span class="badge bg-primary-subtle text-primary">{{ e.subject.code }}</span></td>
+                      <td class="fw-semibold">{{ e.subject.name }}</td>
+                      <td>{{ e.subject.credits }}</td>
+                      <td class="text-secondary small">{{ e.subject.faculty_name }}</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-muted small py-3">No course enrollments registered.</p>
+          {% endif %}
+        </div>
+
+        <!-- Exam Results -->
+        <div class="tab-pane fade" id="student-results">
+          {% if results %}
+            <div class="table-responsive">
+              <table class="table-custom">
+                <thead>
+                  <tr>
+                    <th>Examination</th>
+                    <th>Subject</th>
+                    <th>Scored</th>
+                    <th>Grade</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for r in results %}
+                    <tr>
+                      <td class="fw-semibold">{{ r.examination.exam_name }}</td>
+                      <td>{{ r.examination.subject.name }}</td>
+                      <td><strong>{{ r.marks_obtained }}</strong> / {{ r.examination.max_marks }}</td>
+                      <td><span class="badge bg-primary">{{ r.grade }}</span></td>
+                      <td>
+                        {% if r.is_published %}
+                          <span class="badge badge-soft-success">Published</span>
+                        {% else %}
+                          <span class="badge badge-soft-warning">Unpublished</span>
+                        {% endif %}
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-muted small py-3">No examination results on file for this student.</p>
+          {% endif %}
+        </div>
+
+        <!-- Submissions -->
+        <div class="tab-pane fade" id="student-submissions">
+          {% if submissions %}
+            <div class="table-responsive">
+              <table class="table-custom">
+                <thead>
+                  <tr>
+                    <th>Assignment</th>
+                    <th>Submitted At</th>
+                    <th>Marks</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for sub in submissions %}
+                    <tr>
+                      <td class="fw-semibold">{{ sub.assignment.title }}</td>
+                      <td class="small text-secondary">{{ sub.submitted_at|format_datetime }}</td>
+                      <td>
+                        {% if sub.marks_obtained is not None %}
+                          <strong>{{ sub.marks_obtained }}</strong> / {{ sub.assignment.max_marks }}
+                        {% else %}
+                          <span class="text-muted">Not graded</span>
+                        {% endif %}
+                      </td>
+                      <td><span class="badge badge-soft-info">{{ sub.status }}</span></td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="text-muted small py-3">No assignment submissions submitted yet.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

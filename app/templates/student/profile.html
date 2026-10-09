@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile — StudentHub{% endblock %}
+{% block page_breadcrumb %}Student Portal / Profile & Settings{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+  <h3 class="fw-bold mb-1">Student Profile & Settings</h3>
+  <p class="text-secondary small">View verified academic credentials and update personal contact details</p>
+</div>
+
+<div class="row g-4">
+  <!-- Profile Summary Card -->
+  <div class="col-lg-4">
+    <div class="sh-card text-center mb-4">
+      <div class="position-relative d-inline-block mb-3">
+        {% if profile.avatar %}
+          <img src="{{ url_for('static', filename='uploads/avatars/' + profile.avatar) }}" class="rounded-circle border border-3 border-primary shadow" width="110" height="110" alt="Avatar">
+        {% else %}
+          <img src="{{ url_for('static', filename='uploads/avatars/default-avatar.svg') }}" class="rounded-circle border border-3 border-primary shadow" width="110" height="110" alt="Avatar">
+        {% endif %}
+      </div>
+      <h4 class="fw-bold mb-1">{{ profile.full_name }}</h4>
+      <div class="badge bg-primary fs-6 mb-2">{{ profile.student_id }}</div>
+      <div class="text-secondary small mb-3">{{ current_user.email }}</div>
+
+      <div class="p-3 bg-body-tertiary rounded border text-start small">
+        <div class="d-flex justify-content-between py-1 border-bottom">
+          <span class="text-secondary">Department:</span>
+          <span class="fw-semibold">{{ profile.department.code }}</span>
+        </div>
+        <div class="d-flex justify-content-between py-1 border-bottom">
+          <span class="text-secondary">Semester:</span>
+          <span class="fw-semibold">Semester {{ profile.semester }}</span>
+        </div>
+        <div class="d-flex justify-content-between py-1 border-bottom">
+          <span class="text-secondary">Academic Year:</span>
+          <span class="fw-semibold">{{ profile.academic_year }}</span>
+        </div>
+        <div class="d-flex justify-content-between py-1">
+          <span class="text-secondary">Enrollment Status:</span>
+          <span class="badge bg-success-subtle text-success">Active Student</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Card / Change Password -->
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3"><i class="bi bi-shield-lock me-2 text-primary"></i>Change Password</h5>
+      <form method="POST" action="{{ url_for('auth.change_password') }}" novalidate>
+        {{ pwd_form.hidden_tag() }}
+        
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Current Password</label>
+          {{ pwd_form.current_password(class="form-control form-control-sm", placeholder="••••••••") }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">New Password</label>
+          {{ pwd_form.new_password(class="form-control form-control-sm", placeholder="Min 6 characters") }}
+        </div>
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Confirm New Password</label>
+          {{ pwd_form.confirm_new_password(class="form-control form-control-sm", placeholder="••••••••") }}
+        </div>
+        <div class="d-grid">
+          <button type="submit" class="btn btn-outline-primary btn-sm fw-semibold">Update Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Editable Profile Form -->
+  <div class="col-lg-8">
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3 border-bottom pb-2">Personal Information</h5>
+
+      <!-- Locked Official Fields Notice -->
+      <div class="alert alert-light border py-2 px-3 mb-4 d-flex align-items-center gap-2 small text-secondary">
+        <i class="bi bi-lock-fill text-warning fs-5"></i>
+        <span>Official academic records (Name, Student ID, Department, Semester) are locked and maintained by college administration.</span>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold text-secondary">Full Name (Official)</label>
+          <input type="text" class="form-control bg-body-tertiary" value="{{ profile.full_name }}" disabled>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold text-secondary">Student ID / Roll No.</label>
+          <input type="text" class="form-control bg-body-tertiary" value="{{ profile.student_id }}" disabled>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold text-secondary">College Email Address</label>
+          <input type="email" class="form-control bg-body-tertiary" value="{{ current_user.email }}" disabled>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label small fw-semibold text-secondary">Academic Program</label>
+          <input type="text" class="form-control bg-body-tertiary" value="{{ profile.department.name }}" disabled>
+        </div>
+      </div>
+
+      <h6 class="fw-bold mb-3 border-bottom pb-2 text-primary">Editable Contact & Bio Details</h6>
+
+      <form method="POST" action="{{ url_for('student.profile') }}" enctype="multipart/form-data" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold text-secondary">Phone Number</label>
+            {{ form.phone(class="form-control" + (" is-invalid" if form.phone.errors else ""), placeholder="+1 (555) 000-0000") }}
+            {% for error in form.phone.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-md-6">
+            <label class="form-label small fw-semibold text-secondary">Update Profile Picture</label>
+            {{ form.avatar(class="form-control" + (" is-invalid" if form.avatar.errors else "")) }}
+            <div class="form-text small">Accepted formats: JPG, PNG, WEBP.</div>
+            {% for error in form.avatar.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label small fw-semibold text-secondary">Residential Address</label>
+            {{ form.address(class="form-control" + (" is-invalid" if form.address.errors else ""), rows=2, placeholder="Campus hostel or residential address...") }}
+            {% for error in form.address.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+
+          <div class="col-12">
+            <label class="form-label small fw-semibold text-secondary">About Me / Bio</label>
+            {{ form.bio(class="form-control" + (" is-invalid" if form.bio.errors else ""), rows=3, placeholder="Brief academic interests or bio...") }}
+            {% for error in form.bio.errors %}
+              <div class="text-danger small mt-1">{{ error }}</div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-top text-end">
+          <button type="submit" class="btn btn-primary px-4 fw-semibold">
+            <i class="bi bi-save me-1"></i> Save Profile Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

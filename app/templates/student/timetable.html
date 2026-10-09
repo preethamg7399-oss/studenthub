@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Weekly Timetable — StudentHub{% endblock %}
+{% block page_breadcrumb %}Student Portal / Weekly Timetable{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Weekly Class Schedule</h3>
+    <p class="text-secondary small mb-0">{{ profile.department.name }} &bull; Semester {{ profile.semester }} &bull; Academic Year {{ profile.academic_year }}</p>
+  </div>
+  <span class="badge bg-primary-subtle text-primary p-2">
+    <i class="bi bi-calendar3 me-1"></i> Today is <strong>{{ current_day }}</strong>
+  </span>
+</div>
+
+<!-- Day Selector Tabs -->
+<ul class="nav nav-pills mb-4 gap-2 flex-wrap" id="timetableDays" role="tablist">
+  {% for day in days %}
+    <li class="nav-item" role="presentation">
+      <button class="nav-link {% if day == current_day %}active{% elif current_day not in days and loop.first %}active{% endif %} fw-semibold"
+              id="{{ day|lower }}-tab" data-bs-toggle="pill" data-bs-target="#{{ day|lower }}-pane" type="button" role="tab">
+        {{ day }}
+        {% if day == current_day %}
+          <span class="badge bg-light text-primary ms-1">Today</span>
+        {% endif %}
+      </button>
+    </li>
+  {% endfor %}
+</ul>
+
+<div class="tab-content" id="timetableDaysContent">
+  {% for day in days %}
+    <div class="tab-pane fade {% if day == current_day %}show active{% elif current_day not in days and loop.first %}show active{% endif %}"
+         id="{{ day|lower }}-pane" role="tabpanel">
+      
+      <div class="sh-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="fw-bold mb-0 timetable-grid-day">{{ day }} Schedule</h5>
+          <span class="text-secondary small">{{ schedule[day]|length }} scheduled sessions</span>
+        </div>
+
+        {% if schedule[day] %}
+          <div class="row g-3">
+            {% for slot in schedule[day] %}
+              <div class="col-md-6 col-lg-4">
+                <div class="slot-card {% if slot.is_break %}is-break{% endif %}">
+                  <div class="d-flex justify-content-between align-items-center mb-2">
+                    <span class="badge bg-light text-secondary border small">
+                      <i class="bi bi-clock me-1"></i>{{ slot.start_time|format_time }} – {{ slot.end_time|format_time }}
+                    </span>
+                    {% if slot.is_break %}
+                      <span class="badge bg-warning-subtle text-warning">Recess</span>
+                    {% elif slot.classroom %}
+                      <span class="badge bg-primary-subtle text-primary"><i class="bi bi-geo-alt me-1"></i>{{ slot.classroom }}</span>
+                    {% endif %}
+                  </div>
+
+                  {% if slot.is_break %}
+                    <h5 class="fw-bold text-warning mb-1">{{ slot.break_title or 'Break Period' }}</h5>
+                    <p class="text-secondary small mb-0">Scheduled recess / interval.</p>
+                  {% else %}
+                    <h5 class="fw-bold mb-1">{{ slot.subject.name if slot.subject else 'Classroom Session' }}</h5>
+                    <div class="badge bg-secondary-subtle text-secondary mb-2">{{ slot.subject.code if slot.subject else 'GENERAL' }}</div>
+                    <div class="text-secondary small">
+                      <i class="bi bi-person-video3 me-1"></i>{{ slot.faculty_name or (slot.subject.faculty_name if slot.subject else 'Instructor') }}
+                    </div>
+                  {% endif %}
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="text-center py-5 text-muted">
+            <i class="bi bi-cup-hot fs-1 text-secondary mb-2 d-block"></i>
+            <h6 class="fw-bold">No Classes Scheduled for {{ day }}</h6>
+            <p class="small text-secondary mb-0">Enjoy your free study period or weekend!</p>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

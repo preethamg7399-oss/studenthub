@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Departments — StudentHub{% endblock %}
+{% block page_breadcrumb %}Administration / Departments{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Academic Departments</h3>
+    <p class="text-secondary small mb-0">Manage college branches, academic programs, and faculties</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Add Department Form -->
+  <div class="col-lg-4">
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3 border-bottom pb-2">Add New Department</h5>
+      <form method="POST" action="{{ url_for('admin.departments') }}" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Department Code *</label>
+          {{ form.code(class="form-control" + (" is-invalid" if form.code.errors else ""), placeholder="e.g. CSE, IT, ECE") }}
+          {% for error in form.code.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Department Name *</label>
+          {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="e.g. Computer Science & Engineering") }}
+          {% for error in form.name.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Description</label>
+          {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=3, placeholder="Overview of the department...") }}
+          {% for error in form.description.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="d-grid mt-4">
+          <button type="submit" class="btn btn-primary fw-semibold">
+            <i class="bi bi-plus-circle me-1"></i> Save Department
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Department List -->
+  <div class="col-lg-8">
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3">Registered Departments ({{ departments|length }})</h5>
+      <div class="table-responsive">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Department Name</th>
+              <th class="text-center">Students</th>
+              <th class="text-center">Courses</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for d in departments %}
+              <tr>
+                <td><span class="badge bg-primary fs-6">{{ d.code }}</span></td>
+                <td>
+                  <div class="fw-bold">{{ d.name }}</div>
+                  <small class="text-secondary">{{ d.description or 'No description' }}</small>
+                </td>
+                <td class="text-center fw-semibold">{{ d.students.count() }}</td>
+                <td class="text-center fw-semibold">{{ d.subjects.count() }}</td>
+                <td class="text-end">
+                  <form method="POST" action="{{ url_for('admin.delete_department', dept_id=d.id) }}" class="d-inline" onsubmit="return confirm('Delete this department? Note: It must have no students or courses.');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

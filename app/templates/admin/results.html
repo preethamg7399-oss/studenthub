@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Results — StudentHub{% endblock %}
+{% block page_breadcrumb %}Administration / Examination Results{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Official Result Publication</h3>
+    <p class="text-secondary small mb-0">Record exam marks, compute letter grades, and publish student scorecards</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Record Result Form -->
+  <div class="col-lg-4">
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3 border-bottom pb-2">Record Student Score</h5>
+      <form method="POST" action="{{ url_for('admin.results') }}" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Examination *</label>
+          {{ form.examination_id(class="form-select" + (" is-invalid" if form.examination_id.errors else "")) }}
+          {% for error in form.examination_id.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Student *</label>
+          {{ form.student_id(class="form-select" + (" is-invalid" if form.student_id.errors else "")) }}
+          {% for error in form.student_id.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Marks Scored *</label>
+          {{ form.marks_obtained(class="form-control" + (" is-invalid" if form.marks_obtained.errors else ""), step="0.5") }}
+          {% for error in form.marks_obtained.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Remarks (Optional)</label>
+          {{ form.remarks(class="form-control" + (" is-invalid" if form.remarks.errors else ""), placeholder="e.g. Excellent conceptual clarity") }}
+          {% for error in form.remarks.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="form-check mb-3">
+          {{ form.is_published(class="form-check-input", id="is_published") }}
+          <label class="form-check-label small text-secondary" for="is_published">
+            Publish immediately to student scorecard
+          </label>
+        </div>
+
+        <div class="d-grid mt-4">
+          <button type="submit" class="btn btn-primary fw-semibold">
+            <i class="bi bi-award me-1"></i> Save Student Score
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Results List -->
+  <div class="col-lg-8">
+    <div class="sh-card">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Recorded Results ({{ results|length }})</h5>
+        <input type="text" class="form-control form-control-sm w-auto" placeholder="Filter results..." data-table-search="resultsTable">
+      </div>
+      <div class="table-responsive">
+        <table class="table-custom" id="resultsTable">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>Exam & Subject</th>
+              <th class="text-center">Marks</th>
+              <th class="text-center">Grade</th>
+              <th class="text-center">Status</th>
+              <th class="text-end">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if results %}
+              {% for r in results %}
+                <tr>
+                  <td>
+                    <div class="fw-bold">{{ r.student.full_name }}</div>
+                    <small class="badge bg-light text-dark border">{{ r.student.student_id }}</small>
+                  </td>
+                  <td>
+                    <div class="fw-semibold">{{ r.examination.exam_name }}</div>
+                    <small class="text-secondary">{{ r.examination.subject.name }} ({{ r.examination.subject.code }})</small>
+                  </td>
+                  <td class="text-center">
+                    <strong>{{ r.marks_obtained }}</strong> / {{ r.examination.max_marks }}
+                  </td>
+                  <td class="text-center">
+                    <span class="badge {% if r.grade in ['A+', 'A'] %}badge-soft-success{% elif r.grade in ['B+', 'B'] %}badge-soft-primary{% elif r.grade == 'F' %}badge-soft-danger{% else %}badge-soft-warning{% endif %} fs-6">
+                      {{ r.grade }}
+                    </span>
+                  </td>
+                  <td class="text-center">
+                    {% if r.is_published %}
+                      <span class="badge badge-soft-success">Published</span>
+                    {% else %}
+                      <span class="badge badge-soft-warning">Unpublished</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    <form method="POST" action="{{ url_for('admin.toggle_result_publish', result_id=r.id) }}" class="d-inline">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-sm btn-outline-secondary" title="Toggle Publish State">
+                        {% if r.is_published %}<i class="bi bi-eye-slash"></i> Unpublish{% else %}<i class="bi bi-eye"></i> Publish{% endif %}
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="6" class="text-center py-4 text-muted">No examination results recorded yet.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

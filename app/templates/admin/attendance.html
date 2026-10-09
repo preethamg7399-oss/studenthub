@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Record Attendance — StudentHub{% endblock %}
+{% block page_breadcrumb %}Administration / Attendance Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Official Attendance Register</h3>
+    <p class="text-secondary small mb-0">Record or modify verified student attendance for classroom sessions</p>
+  </div>
+</div>
+
+<!-- Selection Filter Card -->
+<div class="sh-card mb-4 p-3">
+  <form method="GET" action="{{ url_for('admin.attendance') }}" class="row g-2 align-items-end">
+    <div class="col-md-3">
+      <label class="form-label small fw-semibold text-secondary">Department</label>
+      <select name="dept_id" class="form-select" onchange="this.form.submit()">
+        {% for d in departments %}
+          <option value="{{ d.id }}" {% if selected_dept_id == d.id %}selected{% endif %}>{{ d.name }} ({{ d.code }})</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label small fw-semibold text-secondary">Semester</label>
+      <select name="sem" class="form-select" onchange="this.form.submit()">
+        {% for s in range(1, 9) %}
+          <option value="{{ s }}" {% if selected_sem == s %}selected{% endif %}>Semester {{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-4">
+      <label class="form-label small fw-semibold text-secondary">Subject</label>
+      <select name="subject_id" class="form-select">
+        {% for subj in subjects %}
+          <option value="{{ subj.id }}" {% if selected_subject_id == subj.id %}selected{% endif %}>{{ subj.code }} - {{ subj.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="col-md-2">
+      <label class="form-label small fw-semibold text-secondary">Date</label>
+      <input type="date" name="date" class="form-control" value="{{ attendance_date.isoformat() }}">
+    </div>
+
+    <div class="col-md-1">
+      <button type="submit" class="btn btn-primary w-100" title="Load Students">
+        <i class="bi bi-arrow-clockwise"></i>
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Attendance Marking Form -->
+{% if students and selected_subject_id %}
+  <form method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="sh-card">
+      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div>
+          <h5 class="fw-bold mb-0">Class Roster ({{ students|length }} Students)</h5>
+          <span class="text-secondary small">Recording attendance for {{ attendance_date|format_date }}</span>
+        </div>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-outline-success" onclick="markAll('Present')">Mark All Present</button>
+          <button type="button" class="btn btn-sm btn-outline-danger" onclick="markAll('Absent')">Mark All Absent</button>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Roll No.</th>
+              <th>Student Name</th>
+              <th class="text-center" style="width: 280px;">Attendance Status</th>
+              <th>Remarks / Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in students %}
+              {% set existing = existing_records.get(s.id) %}
+              {% set current_status = existing.status if existing else 'Present' %}
+              <tr>
+                <td><span class="badge bg-light text-dark border fw-bold">{{ s.student_id }}</span></td>
+                <td>
+                  <div class="fw-bold">{{ s.full_name }}</div>
+                  <small class="text-secondary">{{ s.user.email }}</small>
+                </td>
+                <td class="text-center">
+                  <div class="btn-group btn-group-sm" role="group">
+                    <input type="radio" class="btn-check status-radio" name="status_{{ s.id }}" id="pres_{{ s.id }}" value="Present" {% if current_status == 'Present' %}checked{% endif %}>
+                    <label class="btn btn-outline-success" for="pres_{{ s.id }}"><i class="bi bi-check-lg"></i> Present</label>
+
+                    <input type="radio" class="btn-check status-radio" name="status_{{ s.id }}" id="abs_{{ s.id }}" value="Absent" {% if current_status == 'Absent' %}checked{% endif %}>
+                    <label class="btn btn-outline-danger" for="abs_{{ s.id }}"><i class="bi bi-x-lg"></i> Absent</label>
+
+                    <input type="radio" class="btn-check status-radio" name="status_{{ s.id }}" id="exc_{{ s.id }}" value="Excused" {% if current_status == 'Excused' %}checked{% endif %}>
+                    <label class="btn btn-outline-warning" for="exc_{{ s.id }}">Excused</label>
+                  </div>
+                </td>
+                <td>
+                  <input type="text" name="remarks_{{ s.id }}" class="form-control form-control-sm" placeholder="Optional remark..." value="{{ existing.remarks if existing else '' }}">
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="mt-4 pt-3 border-top d-flex justify-content-end">
+        <button type="submit" class="btn btn-primary px-4 fw-semibold shadow-sm">
+          <i class="bi bi-check2-circle me-1"></i> Save Attendance Records
+        </button>
+      </div>
+    </div>
+  </form>
+{% else %}
+  <div class="sh-card text-center py-5 text-muted">
+    <i class="bi bi-people fs-1 text-secondary mb-2 d-block"></i>
+    <h5 class="fw-bold">No Students or Subject Selected</h5>
+    <p class="text-secondary small mb-0">Select a department, semester, and valid subject above to load the student attendance roster.</p>
+  </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  function markAll(status) {
+    const radios = document.querySelectorAll('.status-radio');
+    radios.forEach(radio => {
+      if (radio.value === status) {
+        radio.checked = true;
+      }
+    });
+  }
+</script>
+{% endblock %}

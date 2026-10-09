@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Administrator Dashboard — StudentHub{% endblock %}
+{% block page_breadcrumb %}Administration / Executive Dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Administrative Control Center</h3>
+    <p class="text-secondary small mb-0">System-wide academic statistics, admissions, attendance, and coursework oversight</p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a href="{{ url_for('admin.announcements') }}" class="btn btn-primary btn-sm fw-semibold shadow-sm">
+      <i class="bi bi-megaphone-fill me-1"></i> New Notice
+    </a>
+    <a href="{{ url_for('admin.attendance') }}" class="btn btn-outline-primary btn-sm fw-semibold">
+      <i class="bi bi-calendar-check me-1"></i> Mark Attendance
+    </a>
+  </div>
+</div>
+
+<!-- Stat Cards -->
+<div class="row g-3 mb-4">
+  <div class="col-sm-6 col-xl-3">
+    <div class="sh-card stat-card mb-0">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-secondary small fw-semibold">Total Students</span>
+        <div class="stat-icon primary"><i class="bi bi-people-fill"></i></div>
+      </div>
+      <div class="fs-2 fw-bold">{{ total_students }}</div>
+      <div class="text-secondary small">Registered & active</div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="sh-card stat-card mb-0">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-secondary small fw-semibold">Avg. Attendance</span>
+        <div class="stat-icon success"><i class="bi bi-graph-up"></i></div>
+      </div>
+      <div class="fs-2 fw-bold">{{ avg_attendance }}%</div>
+      <div class="text-secondary small">Campus-wide metric</div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="sh-card stat-card mb-0">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-secondary small fw-semibold">Pending Grading</span>
+        <div class="stat-icon warning"><i class="bi bi-hourglass-split"></i></div>
+      </div>
+      <div class="fs-2 fw-bold text-warning">{{ pending_submissions }}</div>
+      <div class="text-secondary small">Submissions waiting review</div>
+    </div>
+  </div>
+
+  <div class="col-sm-6 col-xl-3">
+    <div class="sh-card stat-card mb-0">
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <span class="text-secondary small fw-semibold">Departments & Courses</span>
+        <div class="stat-icon info"><i class="bi bi-building"></i></div>
+      </div>
+      <div class="fs-2 fw-bold">{{ total_departments }} / {{ total_subjects }}</div>
+      <div class="text-secondary small">Active programs</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- Department Distribution Chart -->
+  <div class="col-lg-7">
+    <div class="sh-card h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Student Enrollment by Department</h5>
+        <a href="{{ url_for('admin.departments') }}" class="btn btn-sm btn-outline-primary">Manage Depts</a>
+      </div>
+      <div>
+        <canvas id="deptChart" height="130"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick Admin Links -->
+  <div class="col-lg-5">
+    <div class="sh-card h-100">
+      <h5 class="fw-bold mb-3">Quick Operations</h5>
+      <div class="d-grid gap-2">
+        <a href="{{ url_for('admin.students') }}" class="btn btn-outline-secondary text-start p-2.5 d-flex align-items-center justify-content-between">
+          <span><i class="bi bi-person-lines-fill text-primary me-2"></i> Manage Student Directory</span>
+          <i class="bi bi-chevron-right text-muted"></i>
+        </a>
+        <a href="{{ url_for('admin.subjects') }}" class="btn btn-outline-secondary text-start p-2.5 d-flex align-items-center justify-content-between">
+          <span><i class="bi bi-journal-plus text-primary me-2"></i> Add / Edit Curriculum Subjects</span>
+          <i class="bi bi-chevron-right text-muted"></i>
+        </a>
+        <a href="{{ url_for('admin.examinations') }}" class="btn btn-outline-secondary text-start p-2.5 d-flex align-items-center justify-content-between">
+          <span><i class="bi bi-calendar2-range text-primary me-2"></i> Schedule New Examination</span>
+          <i class="bi bi-chevron-right text-muted"></i>
+        </a>
+        <a href="{{ url_for('admin.results') }}" class="btn btn-outline-secondary text-start p-2.5 d-flex align-items-center justify-content-between">
+          <span><i class="bi bi-award text-primary me-2"></i> Record / Publish Student Results</span>
+          <i class="bi bi-chevron-right text-muted"></i>
+        </a>
+        <a href="{{ url_for('admin.timetable') }}" class="btn btn-outline-secondary text-start p-2.5 d-flex align-items-center justify-content-between">
+          <span><i class="bi bi-clock-history text-primary me-2"></i> Configure Department Timetables</span>
+          <i class="bi bi-chevron-right text-muted"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Recent Registrations -->
+  <div class="col-lg-6">
+    <div class="sh-card mb-0">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Recent Registrations</h5>
+        <a href="{{ url_for('admin.students') }}" class="small text-primary text-decoration-none">View All</a>
+      </div>
+      {% if recent_students %}
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>ID</th>
+                <th>Dept</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in recent_students %}
+                <tr>
+                  <td>
+                    <div class="fw-semibold">{{ s.full_name }}</div>
+                    <small class="text-secondary">{{ s.user.email }}</small>
+                  </td>
+                  <td><span class="badge bg-light text-dark border">{{ s.student_id }}</span></td>
+                  <td>{{ s.department.code }} - Sem {{ s.semester }}</td>
+                  <td>
+                    <a href="{{ url_for('admin.student_detail', student_id=s.id) }}" class="btn btn-sm btn-outline-primary py-0 px-2">
+                      View
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-4 text-muted small">No students registered yet.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Recent Submissions to Review -->
+  <div class="col-lg-6">
+    <div class="sh-card mb-0">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Recent Assignment Submissions</h5>
+        <a href="{{ url_for('admin.assignments') }}" class="small text-primary text-decoration-none">Manage</a>
+      </div>
+      {% if recent_submissions %}
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Assignment</th>
+                <th>Status</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for sub in recent_submissions %}
+                <tr>
+                  <td>
+                    <div class="fw-semibold">{{ sub.student.full_name }}</div>
+                    <small class="text-secondary">{{ sub.student.student_id }}</small>
+                  </td>
+                  <td>
+                    <div class="small fw-semibold text-truncate" style="max-width: 140px;">{{ sub.assignment.title }}</div>
+                    <small class="text-secondary">{{ sub.assignment.subject.code }}</small>
+                  </td>
+                  <td>
+                    {% if sub.marks_obtained is not None %}
+                      <span class="badge badge-soft-success">Graded ({{ sub.marks_obtained }})</span>
+                    {% else %}
+                      <span class="badge badge-soft-warning">Pending</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    <a href="{{ url_for('admin.assignment_submissions', assign_id=sub.assignment_id) }}" class="btn btn-sm btn-outline-primary py-0 px-2">
+                      Review
+                    </a>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-4 text-muted small">No submissions received yet.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const deptCtx = document.getElementById('deptChart');
+  if (deptCtx) {
+    const chartData = {{ dept_chart_data|tojson }};
+    new Chart(deptCtx, {
+      type: 'bar',
+      data: {
+        labels: chartData.map(d => d.name),
+        datasets: [{
+          label: 'Students Enrolled',
+          data: chartData.map(d => d.count),
+          backgroundColor: '#2563eb',
+          borderRadius: 6,
+          barThickness: 28
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: { stepSize: 1 }
+          }
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}

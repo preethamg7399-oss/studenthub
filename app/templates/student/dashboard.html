@@ -1,0 +1,323 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard — StudentHub{% endblock %}
+{% block page_breadcrumb %}Student Portal / Dashboard{% endblock %}
+
+{% block content %}
+<!-- Welcome & Student Identity Banner -->
+<div class="sh-card bg-primary text-white p-4 mb-4" style="background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 50%, #38bdf8 100%); border: none;">
+  <div class="row align-items-center g-3">
+    <div class="col-md-8">
+      <div class="d-flex align-items-center gap-3">
+        {% if profile.avatar %}
+          <img src="{{ url_for('static', filename='uploads/avatars/' + profile.avatar) }}" class="rounded-circle border border-2 border-white shadow-sm" width="68" height="68" alt="Avatar">
+        {% else %}
+          <img src="{{ url_for('static', filename='uploads/avatars/default-avatar.svg') }}" class="rounded-circle border border-2 border-white shadow-sm" width="68" height="68" alt="Avatar">
+        {% endif %}
+        <div>
+          <h3 class="fw-bold mb-1">Welcome back, {{ profile.full_name }}! 👋</h3>
+          <p class="mb-0 text-white-50 small">
+            <span class="badge bg-white text-primary me-2 fw-semibold">{{ profile.student_id }}</span>
+            <span>{{ profile.department.name }} &bull; Semester {{ profile.semester }} &bull; AY {{ profile.academic_year }}</span>
+          </p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 text-md-end">
+      <div class="d-flex gap-2 justify-content-md-end flex-wrap">
+        <a href="{{ url_for('student.timetable') }}" class="btn btn-light btn-sm fw-semibold text-primary shadow-sm">
+          <i class="bi bi-clock-history me-1"></i> Timetable
+        </a>
+        <a href="{{ url_for('student.assignments') }}" class="btn btn-outline-light btn-sm fw-semibold shadow-sm">
+          <i class="bi bi-journal-check me-1"></i> Assignments
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Key Metric Cards -->
+<div class="row g-3 mb-4">
+  <!-- Total Subjects -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="sh-card stat-card mb-0 h-100">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="text-secondary small fw-semibold">Enrolled Subjects</span>
+        <div class="stat-icon primary"><i class="bi bi-journal-bookmark-fill"></i></div>
+      </div>
+      <div class="fs-2 fw-bold">{{ total_subjects }}</div>
+      <div class="text-secondary small">Current Semester {{ profile.semester }}</div>
+    </div>
+  </div>
+
+  <!-- Attendance Percentage -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="sh-card stat-card mb-0 h-100">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="text-secondary small fw-semibold">Overall Attendance</span>
+        <div class="stat-icon {% if overall_attendance >= 85 %}success{% elif overall_attendance >= 75 %}warning{% else %}danger{% endif %}">
+          <i class="bi bi-calendar2-check-fill"></i>
+        </div>
+      </div>
+      <div class="fs-2 fw-bold {% if overall_attendance < 75 %}text-danger{% endif %}">{{ overall_attendance }}%</div>
+      <div class="progress progress-attendance mt-2">
+        <div class="progress-bar {% if overall_attendance >= 85 %}bg-success{% elif overall_attendance >= 75 %}bg-warning{% else %}bg-danger{% endif %}"
+             role="progressbar" style="width: {{ overall_attendance }}%" aria-valuenow="{{ overall_attendance }}" aria-valuemin="0" aria-valuemax="100"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upcoming Exams -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="sh-card stat-card mb-0 h-100">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="text-secondary small fw-semibold">Upcoming Exams</span>
+        <div class="stat-icon info"><i class="bi bi-pencil-square"></i></div>
+      </div>
+      <div class="fs-2 fw-bold">{{ upcoming_exams|length }}</div>
+      <div class="text-secondary small">Scheduled examinations</div>
+    </div>
+  </div>
+
+  <!-- Pending Assignments -->
+  <div class="col-sm-6 col-xl-3">
+    <div class="sh-card stat-card mb-0 h-100">
+      <div class="d-flex align-items-center justify-content-between mb-2">
+        <span class="text-secondary small fw-semibold">Pending Tasks</span>
+        <div class="stat-icon {% if pending_count > 0 %}warning{% else %}success{% endif %}">
+          <i class="bi bi-file-earmark-check-fill"></i>
+        </div>
+      </div>
+      <div class="fs-2 fw-bold">{{ pending_count }}</div>
+      <div class="text-secondary small">Submissions due</div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4 mb-4">
+  <!-- Chart & Attendance Analytics -->
+  <div class="col-lg-8">
+    <div class="sh-card h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+          <h5 class="fw-bold mb-0">Subject-wise Attendance Overview</h5>
+          <span class="text-secondary small">Current semester attendance benchmark</span>
+        </div>
+        <a href="{{ url_for('student.attendance') }}" class="btn btn-sm btn-outline-primary">Full Report</a>
+      </div>
+      <div>
+        <canvas id="attendanceBarChart" height="130"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Today's Schedule Preview -->
+  <div class="col-lg-4">
+    <div class="sh-card h-100">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Today's Schedule ({{ today_name }})</h5>
+        <a href="{{ url_for('student.timetable') }}" class="small text-primary text-decoration-none">Full Week</a>
+      </div>
+      {% if today_timetable %}
+        <div class="list-group list-group-flush">
+          {% for slot in today_timetable %}
+            <div class="list-group-item px-0 py-2 border-bottom">
+              {% if slot.is_break %}
+                <div class="badge bg-warning-subtle text-warning mb-1">{{ slot.break_title or 'Break Period' }}</div>
+                <div class="text-secondary small"><i class="bi bi-clock me-1"></i>{{ slot.start_time|format_time }} - {{ slot.end_time|format_time }}</div>
+              {% else %}
+                <div class="fw-semibold">{{ slot.subject.name if slot.subject else 'Class' }}</div>
+                <div class="text-secondary small d-flex justify-content-between">
+                  <span><i class="bi bi-clock me-1"></i>{{ slot.start_time|format_time }} - {{ slot.end_time|format_time }}</span>
+                  <span class="badge bg-light text-dark"><i class="bi bi-geo-alt me-1"></i>{{ slot.classroom }}</span>
+                </div>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-4 text-muted small">
+          <i class="bi bi-calendar-x fs-2 d-block mb-2 text-secondary"></i>
+          No classes scheduled for today.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Pending Assignments & Exams -->
+  <div class="col-lg-6">
+    <div class="sh-card mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Pending Assignments</h5>
+        <a href="{{ url_for('student.assignments') }}" class="small text-primary text-decoration-none">View All</a>
+      </div>
+      {% if pending_assignments %}
+        <div class="list-group list-group-flush">
+          {% for a in pending_assignments %}
+            <a href="{{ url_for('student.assignment_detail', assignment_id=a.id) }}" class="list-group-item list-group-item-action px-0 py-2.5 border-bottom">
+              <div class="d-flex w-100 justify-content-between">
+                <h6 class="mb-1 fw-semibold text-primary">{{ a.title }}</h6>
+                <small class="text-danger fw-semibold"><i class="bi bi-clock me-1"></i>Due {{ a.due_date|format_datetime }}</small>
+              </div>
+              <p class="mb-1 text-secondary small text-truncate">{{ a.description }}</p>
+              <small class="badge bg-secondary-subtle text-secondary">{{ a.subject.code }} - {{ a.subject.name }}</small>
+            </a>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-4 text-muted small">
+          <i class="bi bi-check-circle-fill text-success fs-2 d-block mb-1"></i>
+          All assignments completed! Great job.
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Upcoming Examinations List -->
+    <div class="sh-card">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Upcoming Examinations</h5>
+        <a href="{{ url_for('student.examinations') }}" class="small text-primary text-decoration-none">Exam Schedule</a>
+      </div>
+      {% if upcoming_exams %}
+        <div class="list-group list-group-flush">
+          {% for exam in upcoming_exams %}
+            <div class="list-group-item px-0 py-2 border-bottom">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <div class="fw-semibold">{{ exam.exam_name }} — {{ exam.subject.name }}</div>
+                  <div class="text-secondary small">
+                    <i class="bi bi-calendar3 me-1"></i>{{ exam.exam_date|format_date }} &bull;
+                    <i class="bi bi-clock me-1"></i>{{ exam.start_time|format_time }} - {{ exam.end_time|format_time }}
+                  </div>
+                </div>
+                <span class="badge bg-info-subtle text-info"><i class="bi bi-geo-alt me-1"></i>{{ exam.venue }}</span>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-4 text-muted small">
+          No upcoming exams currently scheduled.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Announcements & Next 3 Upcoming Events -->
+  <div class="col-lg-6">
+    <!-- Announcements -->
+    <div class="sh-card mb-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Recent Announcements</h5>
+        <a href="{{ url_for('student.announcements') }}" class="small text-primary text-decoration-none">View All</a>
+      </div>
+      {% if recent_announcements %}
+        <div class="list-group list-group-flush">
+          {% for ann in recent_announcements %}
+            <div class="list-group-item px-0 py-2.5 border-bottom">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="badge {% if ann.category == 'Examination' %}bg-danger-subtle text-danger{% elif ann.category == 'Assignment' %}bg-warning-subtle text-warning{% elif ann.category == 'Event' %}bg-success-subtle text-success{% else %}bg-primary-subtle text-primary{% endif %}">
+                  {{ ann.category }}
+                </span>
+                <small class="text-muted">{{ ann.created_at|format_date }}</small>
+              </div>
+              <h6 class="fw-semibold mb-1">{{ ann.title }}</h6>
+              <p class="text-secondary small mb-0">{{ ann.content }}</p>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-4 text-muted small">
+          No recent announcements.
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Next 3 Upcoming Events -->
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3"><i class="bi bi-calendar-event me-2 text-primary"></i>Next 3 Upcoming Events</h5>
+      {% if upcoming_events %}
+        <div class="list-group list-group-flush">
+          {% for ev in upcoming_events %}
+            <div class="list-group-item px-0 py-2.5 border-bottom">
+              <div class="d-flex align-items-center gap-3">
+                <div class="text-center p-2 rounded bg-primary-subtle text-primary" style="min-width: 50px;">
+                  <div class="fw-bold fs-6">{{ ev.created_at.strftime('%d') }}</div>
+                  <div class="small text-uppercase">{{ ev.created_at.strftime('%b') }}</div>
+                </div>
+                <div>
+                  <h6 class="fw-semibold mb-1">{{ ev.title }}</h6>
+                  <p class="text-secondary small mb-0">{{ ev.content }}</p>
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="text-center py-4 text-muted small">
+          No campus events scheduled at this moment.
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Subject Attendance Chart
+  const ctx = document.getElementById('attendanceBarChart');
+  if (ctx) {
+    const rawData = {{ subject_attendance_data|tojson }};
+    const labels = rawData.map(d => d.code);
+    const percentages = rawData.map(d => d.percentage);
+    const backgroundColors = rawData.map(d => d.percentage >= 85 ? '#10b981' : (d.percentage >= 75 ? '#f59e0b' : '#ef4444'));
+
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: labels,
+        datasets: [{
+          label: 'Attendance %',
+          data: percentages,
+          backgroundColor: backgroundColors,
+          borderRadius: 6,
+          barThickness: 24
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              afterLabel: function(context) {
+                const item = rawData[context.dataIndex];
+                return `Attended: ${item.present} / ${item.conducted} classes`;
+              }
+            }
+          }
+        },
+        scales: {
+          y: {
+            min: 0,
+            max: 100,
+            ticks: {
+              callback: value => value + '%'
+            },
+            grid: {
+              color: 'rgba(150, 150, 150, 0.1)'
+            }
+          },
+          x: {
+            grid: { display: false }
+          }
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Announcements — StudentHub{% endblock %}
+{% block page_breadcrumb %}Administration / Campus Announcements{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Campus Announcement Center</h3>
+    <p class="text-secondary small mb-0">Broadcast verified notices to students, pin critical circulars, and dispatch notifications</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Publish Announcement Form -->
+  <div class="col-lg-4">
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3 border-bottom pb-2">Publish Announcement</h5>
+      <form method="POST" action="{{ url_for('admin.announcements') }}" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Notice Title *</label>
+          {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="e.g. End-Semester Examination Schedule Released") }}
+          {% for error in form.title.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label small fw-semibold text-secondary">Category *</label>
+            {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold text-secondary">Priority *</label>
+            {{ form.priority(class="form-select" + (" is-invalid" if form.priority.errors else "")) }}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Audience Target</label>
+          {{ form.department_id(class="form-select") }}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Content & Instructions *</label>
+          {{ form.content(class="form-control" + (" is-invalid" if form.content.errors else ""), rows=5, placeholder="Detailed circular content...") }}
+          {% for error in form.content.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="form-check mb-3">
+          {{ form.is_pinned(class="form-check-input", id="is_pinned") }}
+          <label class="form-check-label small text-secondary" for="is_pinned">
+            Pin to top of student notice board
+          </label>
+        </div>
+
+        <div class="d-grid mt-4">
+          <button type="submit" class="btn btn-primary fw-semibold">
+            <i class="bi bi-broadcast me-1"></i> Broadcast Announcement
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Announcement List -->
+  <div class="col-lg-8">
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3">Active Announcements ({{ announcements|length }})</h5>
+      <div class="table-responsive">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Category & Priority</th>
+              <th>Target Audience</th>
+              <th>Date</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if announcements %}
+              {% for ann in announcements %}
+                <tr>
+                  <td>
+                    <div class="fw-bold">
+                      {% if ann.is_pinned %}
+                        <i class="bi bi-pin-angle-fill text-primary me-1" title="Pinned"></i>
+                      {% endif %}
+                      {{ ann.title }}
+                    </div>
+                    <small class="text-secondary text-truncate d-inline-block" style="max-width: 250px;">{{ ann.content }}</small>
+                  </td>
+                  <td>
+                    <span class="badge {% if ann.category == 'Examination' %}bg-danger-subtle text-danger{% elif ann.category == 'Assignment' %}bg-warning-subtle text-warning{% elif ann.category == 'Event' %}bg-success-subtle text-success{% else %}bg-primary-subtle text-primary{% endif %} mb-1">
+                      {{ ann.category }}
+                    </span>
+                    <div>
+                      {% if ann.priority == 'Urgent' %}
+                        <span class="badge bg-danger">Urgent</span>
+                      {% elif ann.priority == 'Important' %}
+                        <span class="badge bg-warning text-dark">Important</span>
+                      {% else %}
+                        <span class="badge bg-secondary-subtle text-secondary">Normal</span>
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td>
+                    <small class="text-secondary">{{ ann.department.name if ann.department else 'Campus-wide (All)' }}</small>
+                  </td>
+                  <td class="small text-secondary">{{ ann.created_at|format_date }}</td>
+                  <td class="text-end">
+                    <form method="POST" action="{{ url_for('admin.delete_announcement', ann_id=ann.id) }}" class="d-inline" onsubmit="return confirm('Delete this announcement?');">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                      <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+              {% endfor %}
+            {% else %}
+              <tr>
+                <td colspan="5" class="text-center py-4 text-muted">No announcements posted yet.</td>
+              </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

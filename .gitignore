@@ -1,0 +1,53 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Database
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment variables
+.env
+
+# Uploads (allow directory structure, ignore user files)
+app/static/uploads/avatars/*
+!app/static/uploads/avatars/.gitkeep
+!app/static/uploads/avatars/default-avatar.svg
+app/static/uploads/assignments/*
+!app/static/uploads/assignments/.gitkeep
+app/static/uploads/submissions/*
+!app/static/uploads/submissions/.gitkeep
+app/static/uploads/materials/*
+!app/static/uploads/materials/.gitkeep
+
+# IDE / Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

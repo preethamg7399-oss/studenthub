@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Subjects — StudentHub{% endblock %}
+{% block page_breadcrumb %}Administration / Curriculum Subjects{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Curriculum Subjects</h3>
+    <p class="text-secondary small mb-0">Manage course modules, credits, and assigned faculty</p>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Add Subject Form -->
+  <div class="col-lg-4">
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3 border-bottom pb-2">Add New Subject</h5>
+      <form method="POST" action="{{ url_for('admin.subjects') }}" novalidate>
+        {{ form.hidden_tag() }}
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Subject Code *</label>
+          {{ form.code(class="form-control" + (" is-invalid" if form.code.errors else ""), placeholder="e.g. CS501") }}
+          {% for error in form.code.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Subject Name *</label>
+          {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else ""), placeholder="e.g. Database Management Systems") }}
+          {% for error in form.name.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Department *</label>
+          {{ form.department_id(class="form-select" + (" is-invalid" if form.department_id.errors else "")) }}
+          {% for error in form.department_id.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="row g-2 mb-3">
+          <div class="col-6">
+            <label class="form-label small fw-semibold text-secondary">Semester *</label>
+            {{ form.semester(class="form-select" + (" is-invalid" if form.semester.errors else "")) }}
+          </div>
+          <div class="col-6">
+            <label class="form-label small fw-semibold text-secondary">Credits *</label>
+            {{ form.credits(class="form-control" + (" is-invalid" if form.credits.errors else "")) }}
+          </div>
+        </div>
+
+        <div class="mb-3">
+          <label class="form-label small fw-semibold text-secondary">Faculty In-Charge *</label>
+          {{ form.faculty_name(class="form-control" + (" is-invalid" if form.faculty_name.errors else ""), placeholder="e.g. Prof. Alan Turing") }}
+          {% for error in form.faculty_name.errors %}
+            <div class="text-danger small mt-1">{{ error }}</div>
+          {% endfor %}
+        </div>
+
+        <div class="d-grid mt-4">
+          <button type="submit" class="btn btn-primary fw-semibold">
+            <i class="bi bi-journal-plus me-1"></i> Save Subject
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Subjects List -->
+  <div class="col-lg-8">
+    <div class="sh-card">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-bold mb-0">Active Subjects ({{ subjects|length }})</h5>
+        <input type="text" class="form-control form-control-sm w-auto" placeholder="Filter subjects..." data-table-search="subjectsTable">
+      </div>
+      <div class="table-responsive">
+        <table class="table-custom" id="subjectsTable">
+          <thead>
+            <tr>
+              <th>Subject</th>
+              <th>Department</th>
+              <th class="text-center">Semester</th>
+              <th class="text-center">Credits</th>
+              <th>Faculty</th>
+              <th class="text-end">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for s in subjects %}
+              <tr>
+                <td>
+                  <div class="fw-bold">{{ s.name }}</div>
+                  <span class="badge bg-secondary-subtle text-secondary">{{ s.code }}</span>
+                </td>
+                <td><span class="badge bg-light text-dark border">{{ s.department.code }}</span></td>
+                <td class="text-center fw-semibold">Sem {{ s.semester }}</td>
+                <td class="text-center fw-semibold">{{ s.credits }}</td>
+                <td class="small text-secondary">{{ s.faculty_name }}</td>
+                <td class="text-end">
+                  <form method="POST" action="{{ url_for('admin.delete_subject', subj_id=s.id) }}" class="d-inline" onsubmit="return confirm('Delete this subject?');">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete Subject">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

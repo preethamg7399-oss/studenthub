@@ -1,0 +1,82 @@
+{% extends "auth_base.html" %}
+
+{% block title %}Sign In — StudentHub{% endblock %}
+
+{% block auth_content %}
+<div class="mb-4">
+  <h4 class="fw-bold mb-1">Welcome Back</h4>
+  <p class="text-secondary small">Sign in with your Student ID, username, or email to access your dashboard.</p>
+</div>
+
+<form method="POST" action="{{ url_for('auth.login', next=request.args.get('next')) }}" novalidate>
+  {{ form.hidden_tag() }}
+
+  <div class="mb-3">
+    <label class="form-label small fw-semibold text-secondary">Username or Email</label>
+    <div class="input-group">
+      <span class="input-group-text bg-body-tertiary border-end-0 text-secondary"><i class="bi bi-person"></i></span>
+      {{ form.login_id(class="form-control border-start-0" + (" is-invalid" if form.login_id.errors else ""), placeholder="e.g. student1 or alex@campus.edu", autofocus=true) }}
+    </div>
+    {% for error in form.login_id.errors %}
+      <div class="text-danger small mt-1">{{ error }}</div>
+    {% endfor %}
+  </div>
+
+  <div class="mb-3">
+    <div class="d-flex justify-content-between align-items-center mb-1">
+      <label class="form-label small fw-semibold text-secondary mb-0">Password</label>
+    </div>
+    <div class="input-group">
+      <span class="input-group-text bg-body-tertiary border-end-0 text-secondary"><i class="bi bi-lock"></i></span>
+      {{ form.password(class="form-control border-start-0" + (" is-invalid" if form.password.errors else ""), placeholder="••••••••") }}
+    </div>
+    {% for error in form.password.errors %}
+      <div class="text-danger small mt-1">{{ error }}</div>
+    {% endfor %}
+  </div>
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="form-check">
+      {{ form.remember_me(class="form-check-input", id="remember_me") }}
+      <label class="form-check-label small text-secondary" for="remember_me">
+        Keep me signed in
+      </label>
+    </div>
+  </div>
+
+  <div class="d-grid mb-3">
+    <button type="submit" class="btn btn-primary py-2 fw-semibold shadow-sm" style="background: linear-gradient(135deg, #2563eb, #1d4ed8);">
+      <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to StudentHub
+    </button>
+  </div>
+</form>
+
+<div class="text-center pt-3 border-top mt-4">
+  <span class="text-secondary small">New student?</span>
+  <a href="{{ url_for('auth.register') }}" class="small fw-semibold text-primary text-decoration-none ms-1">Create an Account</a>
+</div>
+
+<!-- Quick Demo Credentials Box -->
+<div class="mt-4 p-3 rounded-3 bg-body-tertiary border text-start">
+  <div class="d-flex align-items-center gap-1 text-secondary small fw-semibold mb-2">
+    <i class="bi bi-info-circle-fill text-primary"></i>
+    <span>Demo Quick-Access Credentials:</span>
+  </div>
+  <div class="row g-2 small">
+    <div class="col-6">
+      <div class="p-2 border rounded bg-body">
+        <span class="badge bg-primary-subtle text-primary mb-1">Student</span>
+        <div class="text-secondary" style="font-size: 0.75rem;">User: <code>student1</code></div>
+        <div class="text-secondary" style="font-size: 0.75rem;">Pass: <code>password123</code></div>
+      </div>
+    </div>
+    <div class="col-6">
+      <div class="p-2 border rounded bg-body">
+        <span class="badge bg-danger-subtle text-danger mb-1">Admin</span>
+        <div class="text-secondary" style="font-size: 0.75rem;">User: <code>admin</code></div>
+        <div class="text-secondary" style="font-size: 0.75rem;">Pass: <code>admin123</code></div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}Examinations & Results — StudentHub{% endblock %}
+{% block page_breadcrumb %}Student Portal / Examinations & Results{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h3 class="fw-bold mb-1">Examinations & Academic Results</h3>
+    <p class="text-secondary small mb-0">Official examination timetables, seat venues, and verified scorecards</p>
+  </div>
+</div>
+
+<!-- Tabs for Exam Schedule vs Results -->
+<ul class="nav nav-tabs mb-4" id="examTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active fw-semibold" id="schedule-tab" data-bs-toggle="tab" data-bs-target="#schedule-pane" type="button" role="tab">
+      <i class="bi bi-calendar-event me-2"></i>Exam Timetable ({{ upcoming_exams|length }})
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link fw-semibold" id="results-tab" data-bs-toggle="tab" data-bs-target="#results-pane" type="button" role="tab">
+      <i class="bi bi-award me-2"></i>Official Results & Grades ({{ results|length }})
+    </button>
+  </li>
+</ul>
+
+<div class="tab-content" id="examTabsContent">
+  <!-- TAB 1: Examination Timetable -->
+  <div class="tab-pane fade show active" id="schedule-pane" role="tabpanel">
+    <div class="sh-card">
+      <h5 class="fw-bold mb-3">Upcoming Examination Schedule</h5>
+      {% if upcoming_exams %}
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Date & Day</th>
+                <th>Time Window</th>
+                <th>Subject & Code</th>
+                <th>Exam Name</th>
+                <th>Venue / Room</th>
+                <th class="text-center">Max Marks</th>
+                <th class="text-center">Pass Marks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for exam in upcoming_exams %}
+                <tr>
+                  <td>
+                    <div class="fw-bold"><i class="bi bi-calendar-date text-primary me-1"></i>{{ exam.exam_date|format_date }}</div>
+                    <small class="text-secondary">{{ exam.exam_date.strftime('%A') }}</small>
+                  </td>
+                  <td>
+                    <span class="badge bg-light text-dark border">
+                      <i class="bi bi-clock me-1 text-secondary"></i>{{ exam.start_time|format_time }} – {{ exam.end_time|format_time }}
+                    </span>
+                  </td>
+                  <td>
+                    <div class="fw-semibold">{{ exam.subject.name }}</div>
+                    <small class="text-secondary">{{ exam.subject.code }} &bull; Sem {{ exam.semester }}</small>
+                  </td>
+                  <td><span class="badge bg-primary-subtle text-primary">{{ exam.exam_name }}</span></td>
+                  <td>
+                    <div class="fw-semibold text-danger-emphasis"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ exam.venue }}</div>
+                  </td>
+                  <td class="text-center fw-semibold">{{ exam.max_marks }}</td>
+                  <td class="text-center text-secondary">{{ exam.passing_marks }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      {% else %}
+        <div class="text-center py-5 text-muted">
+          <i class="bi bi-calendar-check fs-1 text-secondary mb-2 d-block"></i>
+          No upcoming examinations currently scheduled.
+        </div>
+      {% endif %}
+    </div>
+
+    {% if past_exams %}
+      <div class="sh-card mt-4">
+        <h5 class="fw-bold mb-3 text-secondary">Conducted Examinations (Past)</h5>
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Subject</th>
+                <th>Exam Name</th>
+                <th>Venue</th>
+                <th class="text-center">Max Marks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for exam in past_exams %}
+                <tr class="opacity-75">
+                  <td>{{ exam.exam_date|format_date }}</td>
+                  <td>{{ exam.subject.name }} ({{ exam.subject.code }})</td>
+                  <td>{{ exam.exam_name }}</td>
+                  <td>{{ exam.venue }}</td>
+                  <td class="text-center">{{ exam.max_marks }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- TAB 2: Published Results -->
+  <div class="tab-pane fade" id="results-pane" role="tabpanel">
+    <!-- Performance Summary Banner -->
+    {% if results %}
+      <div class="row g-3 mb-4">
+        <div class="col-sm-4">
+          <div class="sh-card stat-card mb-0">
+            <span class="text-secondary small fw-semibold">Total Scored</span>
+            <div class="fs-2 fw-bold text-primary">{{ total_obtained }} / {{ total_max }}</div>
+            <div class="text-secondary small">Across {{ results|length }} published courses</div>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="sh-card stat-card mb-0">
+            <span class="text-secondary small fw-semibold">Aggregate Percentage</span>
+            <div class="fs-2 fw-bold text-success">{{ overall_percentage }}%</div>
+            <div class="progress progress-attendance mt-2">
+              <div class="progress-bar bg-success" style="width: {{ overall_percentage }}%"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-4">
+          <div class="sh-card stat-card mb-0">
+            <span class="text-secondary small fw-semibold">Academic Status</span>
+            <div class="fs-2 fw-bold text-primary">
+              {% if overall_percentage >= 75 %}Distinction{% elif overall_percentage >= 60 %}First Class{% elif overall_percentage >= 40 %}Pass{% else %}Re-appear{% endif %}
+            </div>
+            <div class="text-secondary small">Current Academic Standing</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="sh-card">
+        <h5 class="fw-bold mb-3">Published Scorecard</h5>
+        <div class="table-responsive">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Subject</th>
+                <th>Examination</th>
+                <th class="text-center">Max Marks</th>
+                <th class="text-center">Marks Scored</th>
+                <th class="text-center">Percentage</th>
+                <th class="text-center">Letter Grade</th>
+                <th>Remarks</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for res in results %}
+                {% set pct = (res.marks_obtained / res.examination.max_marks * 100)|round(1) %}
+                <tr>
+                  <td>
+                    <div class="fw-bold">{{ res.examination.subject.name }}</div>
+                    <small class="text-secondary">{{ res.examination.subject.code }} &bull; {{ res.examination.subject.credits }} Credits</small>
+                  </td>
+                  <td>{{ res.examination.exam_name }}</td>
+                  <td class="text-center">{{ res.examination.max_marks }}</td>
+                  <td class="text-center fw-bold fs-6 text-primary">{{ res.marks_obtained }}</td>
+                  <td class="text-center fw-semibold">{{ pct }}%</td>
+                  <td class="text-center">
+                    <span class="badge {% if res.grade in ['A+', 'A'] %}badge-soft-success{% elif res.grade in ['B+', 'B'] %}badge-soft-primary{% elif res.grade == 'F' %}badge-soft-danger{% else %}badge-soft-warning{% endif %} fs-6 px-3">
+                      {{ res.grade }}
+                    </span>
+                  </td>
+                  <td class="text-secondary small">{{ res.remarks or 'Satisfactory completion' }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% else %}
+      <div class="sh-card text-center py-5 text-muted">
+        <i class="bi bi-clock-history fs-1 text-secondary mb-2 d-block"></i>
+        <h5 class="fw-bold">No Published Results Yet</h5>
+        <p class="text-secondary small mb-0">Official results for current examinations will be displayed here once verified and published by the administration.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
