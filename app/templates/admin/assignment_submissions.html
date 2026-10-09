@@ -58,14 +58,14 @@
                 {% endif %}
               </td>
               <td>
-                {% if sub.marks_obtained is not None %}
+                {% if sub.marks_obtained is not none %}
                   <span class="badge badge-soft-success">Graded</span>
                 {% else %}
                   <span class="badge badge-soft-warning">Pending Review</span>
                 {% endif %}
               </td>
               <td>
-                {% if sub.marks_obtained is not None %}
+                {% if sub.marks_obtained is not none %}
                   <strong class="fs-6 text-primary">{{ sub.marks_obtained }}</strong> / {{ assignment.max_marks }}
                 {% else %}
                   <span class="text-muted small">—</span>
@@ -73,7 +73,7 @@
               </td>
               <td class="text-end">
                 <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#gradeModal{{ sub.id }}">
-                  <i class="bi bi-pencil-square me-1"></i> {% if sub.marks_obtained is not None %}Re-Grade{% else %}Grade{% endif %}
+                  <i class="bi bi-pencil-square me-1"></i> {% if sub.marks_obtained is not none %}Re-Grade{% else %}Grade{% endif %}
                 </button>
 
                 <!-- Grading Modal -->

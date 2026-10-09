@@ -184,7 +184,7 @@
                     <small class="text-secondary">{{ sub.assignment.subject.code }}</small>
                   </td>
                   <td>
-                    {% if sub.marks_obtained is not None %}
+                    {% if sub.marks_obtained is not none %}
                       <span class="badge badge-soft-success">Graded ({{ sub.marks_obtained }})</span>
                     {% else %}
                       <span class="badge badge-soft-warning">Pending</span>

@@ -176,7 +176,7 @@
                       <td class="fw-semibold">{{ sub.assignment.title }}</td>
                       <td class="small text-secondary">{{ sub.submitted_at|format_datetime }}</td>
                       <td>
-                        {% if sub.marks_obtained is not None %}
+                        {% if sub.marks_obtained is not none %}
                           <strong>{{ sub.marks_obtained }}</strong> / {{ sub.assignment.max_marks }}
                         {% else %}
                           <span class="text-muted">Not graded</span>
