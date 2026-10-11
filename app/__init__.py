@@ -23,6 +23,7 @@ def create_app(config_name: str = None) -> Flask:
 
     if config_name is None:
         config_name = os.environ.get("FLASK_ENV", "development")
+
         if config_name not in config_by_name:
             config_name = "development"
 
@@ -33,6 +34,7 @@ def create_app(config_name: str = None) -> Flask:
     instance_path.mkdir(parents=True, exist_ok=True)
 
     upload_folder = Path(app.config["UPLOAD_FOLDER"])
+
     for sub in ["avatars", "assignments", "submissions", "materials"]:
         (upload_folder / sub).mkdir(parents=True, exist_ok=True)
 
