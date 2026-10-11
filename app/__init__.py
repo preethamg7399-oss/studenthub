@@ -6,16 +6,61 @@ from flask_login import LoginManager, current_user
 from flask_wtf.csrf import CSRFProtect
 
 from config import config_by_name
-from app.models import db, User, Notification
+from app.models import db, User, Notification, Department
 
 login_manager = LoginManager()
 csrf = CSRFProtect()
 
 
 def initialize_database(app):
-    """Create missing database tables without deleting existing data."""
+    """Create missing tables and initialize default departments safely."""
+
     with app.app_context():
         db.create_all()
+
+        default_departments = [
+            (
+                "CSE",
+                "Computer Science & Engineering",
+                "Department of Computer Science and Software Engineering.",
+            ),
+            (
+                "IT",
+                "Information Technology",
+                "Department of Information Technology and Cloud Systems.",
+            ),
+            (
+                "ECE",
+                "Electronics & Communication",
+                "Department of Electronics and Signal Processing.",
+            ),
+            (
+                "ME",
+                "Mechanical Engineering",
+                "Department of Mechanical and Industrial Systems.",
+            ),
+        ]
+
+        try:
+            for code, name, description in default_departments:
+                existing_department = Department.query.filter_by(
+                    code=code
+                ).first()
+
+                if existing_department is None:
+                    department = Department(
+                        code=code,
+                        name=name,
+                        description=description,
+                    )
+                    db.session.add(department)
+
+            db.session.commit()
+
+        except Exception:
+            db.session.rollback()
+            app.logger.exception("Database initialization failed")
+            raise
 
 
 def create_app(config_name: str = None) -> Flask:
@@ -65,6 +110,7 @@ def create_app(config_name: str = None) -> Flask:
         if current_user.is_authenticated:
             if current_user.is_admin:
                 return redirect(url_for("admin.dashboard"))
+
             return redirect(url_for("student.dashboard"))
 
         return redirect(url_for("auth.login"))
@@ -97,18 +143,21 @@ def create_app(config_name: str = None) -> Flask:
     def format_datetime(value, format="%b %d, %Y %I:%M %p"):
         if value is None:
             return ""
+
         return value.strftime(format)
 
     @app.template_filter("format_date")
     def format_date(value, format="%b %d, %Y"):
         if value is None:
             return ""
+
         return value.strftime(format)
 
     @app.template_filter("format_time")
     def format_time(value, format="%I:%M %p"):
         if value is None:
             return ""
+
         return value.strftime(format)
 
     @app.errorhandler(403)
